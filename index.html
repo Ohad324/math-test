@@ -130,8 +130,6 @@
         .feedback-banner.show { display: flex; }
         .feedback-banner.correct-fb { background: rgba(144,190,109,0.15); border: 1px solid rgba(144,190,109,0.3); color: var(--accent2); }
         .feedback-banner.wrong-fb   { background: rgba(249,65,68,0.12);   border: 1px solid rgba(249,65,68,0.3);   color: #ff8080; }
-        #notify-dad { margin-inline-start: auto; background: #25D366; color: #000; text-decoration: none; padding: 6px 12px; border-radius: 10px; font-size: 0.82rem; font-weight: 700; white-space: nowrap; transition: transform 0.1s, background 0.15s; }
-        #notify-dad:hover { background: #1ebe5d; transform: scale(1.04); }
 
         #next-btn { width: 100%; background: linear-gradient(135deg, var(--purple), #7c3aed); border: none; border-radius: 13px; padding: 15px; color: white; font-family: 'Rubik', sans-serif; font-size: 0.98rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: none; box-shadow: 0 6px 24px rgba(124,58,237,0.35); }
         #next-btn:hover { transform: translateY(-2px); }
@@ -243,7 +241,6 @@
     <div class="feedback-banner" id="feedback-banner">
         <span id="feedback-icon">✅</span>
         <span id="feedback-text">כל הכבוד!</span>
-        <a id="notify-dad" href="#" target="_blank" rel="noopener">📲 שלח לאבא</a>
     </div>
     <button id="next-btn">המשך ←</button>
 </div>
@@ -309,6 +306,8 @@
 
 <script>
 const PARENT_PHONE = "972542584032";
+// ntfy.sh push notification topic — keep this secret-ish; anyone with the name can subscribe
+const NTFY_TOPIC   = "ohad-math-3xj9k7q2v8t5";
 const ROUND_SIZE = 20;
 
 // ── Fraction helpers ──────────────────────────────────────────────
@@ -610,7 +609,6 @@ const optionsContainer = document.getElementById("options-container");
 const feedbackBanner = document.getElementById("feedback-banner");
 const feedbackIcon   = document.getElementById("feedback-icon");
 const feedbackText   = document.getElementById("feedback-text");
-const notifyDadLink  = document.getElementById("notify-dad");
 const nextBtn        = document.getElementById("next-btn");
 const quizContainer  = document.getElementById("quiz-container");
 const roundContainer = document.getElementById("round-container");
@@ -695,8 +693,12 @@ function selectOption(selectedIdx, selectedBtn){
     allBtns.forEach((b,i)=>{ b.disabled=true; if(i!==selectedIdx&&i!==correct) b.classList.add("dimmed"); });
 
     const isRight = (selectedIdx === correct);
-    const notifyMsg = encodeURIComponent(`שאלה ${currentQ+1}: ${isRight ? "✅ נכון" : "❌ טעות"}`);
-    notifyDadLink.href = `https://wa.me/${PARENT_PHONE}?text=${notifyMsg}`;
+    // Auto push notification via ntfy.sh — fire-and-forget
+    fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+        method: "POST",
+        body: `Q${currentQ+1}: ${isRight ? "✅ correct" : "❌ wrong"}`,
+        headers: { "Title": "Math practice", "Tags": isRight ? "white_check_mark" : "x" }
+    }).catch(() => {});
 
     nextBtn.classList.add("show");
     nextBtn.textContent = isLastQ ? "לצפייה בתוצאות 🏆" : isLastInRound ? "לסיום הסבב 🎉" : "המשך ←";

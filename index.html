@@ -308,6 +308,36 @@
 const PARENT_PHONE = "972542584032";
 // ntfy.sh push notification topic — keep this secret-ish; anyone with the name can subscribe
 const NTFY_TOPIC   = "ohad-math-3xj9k7q2v8t5";
+
+// Identify which device/child sent the notification — prompt once, store locally
+function getPlayerName(){
+    let name = localStorage.getItem("mt_player");
+    if (!name) {
+        name = (prompt("מה שמך? (ישמר במכשיר זה לזיהוי בהתראות)") || "").trim();
+        if (!name) name = "לא ידוע";
+        localStorage.setItem("mt_player", name);
+    }
+    return name;
+}
+
+// Convert math HTML (with .frac / .mixed spans) to a plain-text exercise string
+function plainText(html){
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    div.querySelectorAll(".mixed").forEach(el => {
+        const whole = el.querySelector(".whole")?.textContent || "";
+        const fr    = el.querySelector(".frac");
+        const num   = fr?.querySelector(".num")?.textContent || "";
+        const den   = fr?.querySelector(".den")?.textContent || "";
+        el.replaceWith(`${whole} ${num}/${den}`);
+    });
+    div.querySelectorAll(".frac").forEach(fr => {
+        const num = fr.querySelector(".num")?.textContent || "";
+        const den = fr.querySelector(".den")?.textContent || "";
+        fr.replaceWith(`${num}/${den}`);
+    });
+    return div.textContent.replace(/\s+/g, " ").trim();
+}
 const ROUND_SIZE = 20;
 
 // ── Fraction helpers ──────────────────────────────────────────────
@@ -694,10 +724,22 @@ function selectOption(selectedIdx, selectedBtn){
 
     const isRight = (selectedIdx === correct);
     // Auto push notification via ntfy.sh — fire-and-forget
-    fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+    const player = getPlayerName();
+    const qPlain   = plainText(questions[currentQ].q());
+    const chosen   = plainText(questions[currentQ].options()[selectedIdx]);
+    const correctT = questions[currentQ].correctText;
+    const body = isRight
+        ? `Q${currentQ+1}: ✅ נכון\n${qPlain} → ${chosen}`
+        : `Q${currentQ+1}: ❌ טעות\n${qPlain}\nבחר: ${chosen}\nנכון: ${correctT}`;
+    fetch("https://ntfy.sh/", {
         method: "POST",
-        body: `Q${currentQ+1}: ${isRight ? "✅ correct" : "❌ wrong"}`,
-        headers: { "Title": "Math practice", "Tags": isRight ? "white_check_mark" : "x" }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            topic:   NTFY_TOPIC,
+            title:   `Math · ${player}`,
+            message: body,
+            tags:    [isRight ? "white_check_mark" : "x"]
+        })
     }).catch(() => {});
 
     nextBtn.classList.add("show");

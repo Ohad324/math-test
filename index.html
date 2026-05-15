@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אימון חשבון – כיתה ה'</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0e17;
+            --card: #16213e;
+            --accent: #f9c74f;
+            --accent2: #90be6d;
+            --accent3: #f94144;
+            --purple: #a78bfa;
+            --text: #fffffe;
+            --muted: #a7a9be;
+            --radius: 20px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { background: #0f0e17 !important; color: #fffffe !important; }
+        body {
+            font-family: 'Rubik', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(1px 1px at 15% 20%, rgba(249,199,79,0.4) 0%, transparent 100%),
+                radial-gradient(1px 1px at 40% 60%, rgba(167,139,250,0.3) 0%, transparent 100%),
+                radial-gradient(1.5px 1.5px at 70% 10%, rgba(144,190,109,0.4) 0%, transparent 100%),
+                radial-gradient(1px 1px at 85% 75%, rgba(249,199,79,0.3) 0%, transparent 100%),
+                radial-gradient(1px 1px at 60% 40%, rgba(249,65,68,0.3) 0%, transparent 100%),
+                radial-gradient(1.5px 1.5px at 90% 30%, rgba(249,199,79,0.35) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== FRACTION STYLES ===== */
+        .frac {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 10px;
+            font-size: 0.95em;
+            line-height: 1;
+        }
+        .frac .num { border-bottom: 2.5px solid currentColor; padding: 0 5px 2px; font-weight: 800; min-width: 18px; text-align: center; }
+        .frac .den { padding: 2px 5px 0; font-weight: 800; min-width: 18px; text-align: center; }
+        .mixed { direction: ltr; display: inline-flex; align-items: center; gap: 3px; vertical-align: middle; }
+        .mixed .whole { font-weight: 800; }
+
+        /* ===== LAYOUT ===== */
+        .header { width: 100%; max-width: 480px; text-align: center; margin-bottom: 16px; position: relative; z-index: 1; }
+        .header-title { font-family: 'Fredoka One', cursive; font-size: 1.9rem; color: var(--accent); text-shadow: 0 0 24px rgba(249,199,79,0.4); }
+        .header-sub { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+
+        /* Round indicator */
+        .round-indicator {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .round-pip {
+            flex: 1;
+            height: 6px;
+            border-radius: 100px;
+            background: rgba(255,255,255,0.1);
+            transition: background 0.4s;
+        }
+        .round-pip.done { background: var(--accent2); }
+        .round-pip.active { background: var(--purple); box-shadow: 0 0 8px rgba(167,139,250,0.6); }
+
+        .progress-area { width: 100%; max-width: 480px; margin-bottom: 14px; position: relative; z-index: 1; }
+        .progress-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+        .pill { font-size: 0.78rem; font-weight: 700; padding: 4px 12px; border-radius: 100px; }
+        .pill-q { background: rgba(167,139,250,0.15); color: var(--purple); border: 1px solid rgba(167,139,250,0.3); }
+        .pill-s { background: rgba(144,190,109,0.15); color: var(--accent2); border: 1px solid rgba(144,190,109,0.3); }
+        .pill-r { background: rgba(249,199,79,0.15); color: var(--accent); border: 1px solid rgba(249,199,79,0.3); }
+        .progress-track { width: 100%; height: 5px; background: rgba(255,255,255,0.08); border-radius: 100px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--accent)); border-radius: 100px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 0 10px rgba(167,139,250,0.5); }
+
+        #quiz-container { width: 100%; max-width: 480px; position: relative; z-index: 1; }
+
+        .question-card { background: var(--card); border: 1px solid rgba(255,255,255,0.07); border-radius: var(--radius); padding: 22px 18px; margin-bottom: 14px; position: relative; overflow: hidden; }
+        .question-card::before { content: ''; position: absolute; top: -40px; left: -40px; width: 120px; height: 120px; background: radial-gradient(circle, rgba(167,139,250,0.12) 0%, transparent 70%); pointer-events: none; }
+
+        .topic-badge { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 3px 10px; border-radius: 100px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .topic-fractions  { background: rgba(249,199,79,0.1);  color: var(--accent);  border: 1px solid rgba(249,199,79,0.25); }
+        .topic-add        { background: rgba(144,190,109,0.1); color: var(--accent2); border: 1px solid rgba(144,190,109,0.25); }
+        .topic-sub        { background: rgba(249,65,68,0.1);   color: #ff8080;        border: 1px solid rgba(249,65,68,0.25); }
+        .topic-lcd        { background: rgba(167,139,250,0.1); color: var(--purple);  border: 1px solid rgba(167,139,250,0.25); }
+        .topic-number-line{ background: rgba(167,139,250,0.1); color: var(--purple);  border: 1px solid rgba(167,139,250,0.25); }
+        .topic-decimals   { background: rgba(144,190,109,0.1); color: var(--accent2); border: 1px solid rgba(144,190,109,0.25); }
+
+        #question-text { font-size: 1.15rem; font-weight: 700; line-height: 2; color: var(--text); }
+
+        .options-grid { display: flex; flex-direction: column; gap: 9px; margin-bottom: 14px; }
+        .option-btn {
+            width: 100%; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.1);
+            border-radius: 13px; padding: 13px 16px; color: var(--text); font-family: 'Rubik', sans-serif;
+            font-size: 1rem; font-weight: 500; text-align: right; cursor: pointer;
+            transition: all 0.18s ease; display: flex; align-items: center; gap: 11px; line-height: 2;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.4); transform: translateX(-3px); }
+        .option-btn .opt-letter { min-width: 28px; height: 28px; border-radius: 7px; background: rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 800; color: var(--muted); flex-shrink: 0; }
+        .option-btn.correct { background: rgba(144,190,109,0.15); border-color: var(--accent2); animation: pulse-green 0.4s ease; }
+        .option-btn.correct .opt-letter { background: var(--accent2); color: var(--bg); }
+        .option-btn.wrong { background: rgba(249,65,68,0.12); border-color: var(--accent3); }
+        .option-btn.wrong .opt-letter { background: var(--accent3); color: white; }
+        .option-btn.dimmed { opacity: 0.35; }
+
+        @keyframes pulse-green { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
+
+        .feedback-banner { border-radius: 12px; padding: 11px 15px; font-size: 0.92rem; font-weight: 700; margin-bottom: 12px; display: none; align-items: center; gap: 10px; line-height: 1.8; }
+        .feedback-banner.show { display: flex; }
+        .feedback-banner.correct-fb { background: rgba(144,190,109,0.15); border: 1px solid rgba(144,190,109,0.3); color: var(--accent2); }
+        .feedback-banner.wrong-fb   { background: rgba(249,65,68,0.12);   border: 1px solid rgba(249,65,68,0.3);   color: #ff8080; }
+
+        #next-btn { width: 100%; background: linear-gradient(135deg, var(--purple), #7c3aed); border: none; border-radius: 13px; padding: 15px; color: white; font-family: 'Rubik', sans-serif; font-size: 0.98rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: none; box-shadow: 0 6px 24px rgba(124,58,237,0.35); }
+        #next-btn:hover { transform: translateY(-2px); }
+        #next-btn.show { display: block; }
+
+        /* ===== ROUND COMPLETE SCREEN ===== */
+        #round-container { display: none; width: 100%; max-width: 480px; position: relative; z-index: 1; flex-direction: column; gap: 14px; }
+        #round-container.show { display: flex; }
+
+        .round-hero { background: var(--card); border: 1px solid rgba(255,255,255,0.07); border-radius: var(--radius); padding: 28px 22px; text-align: center; }
+        .round-emoji { font-size: 3.5rem; display: block; margin-bottom: 10px; }
+        .round-title { font-family: 'Fredoka One', cursive; font-size: 1.7rem; color: var(--accent); margin-bottom: 6px; }
+        .round-sub { color: var(--muted); font-size: 0.88rem; }
+
+        .round-score-box { background: linear-gradient(135deg, rgba(249,199,79,0.1), rgba(167,139,250,0.1)); border: 1px solid rgba(249,199,79,0.2); border-radius: var(--radius); padding: 18px; text-align: center; }
+        .round-score-num { font-family: 'Fredoka One', cursive; font-size: 3rem; background: linear-gradient(135deg, var(--accent), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+        .round-score-lbl { color: var(--muted); font-size: 0.82rem; margin-top: 4px; }
+
+        .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-card { background: var(--card); border: 1px solid rgba(255,255,255,0.07); border-radius: 13px; padding: 14px; text-align: center; }
+        .stat-val { font-family: 'Fredoka One', cursive; font-size: 1.7rem; }
+        .stat-val.green { color: var(--accent2); }
+        .stat-val.red   { color: var(--accent3); }
+        .stat-lbl { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+        .whatsapp-btn { width: 100%; background: linear-gradient(135deg, #25d366, #128c7e); border: none; border-radius: 13px; padding: 16px; color: white; font-family: 'Rubik', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 6px 24px rgba(37,211,102,0.3); }
+        .whatsapp-btn:hover { transform: translateY(-2px); }
+
+        .continue-btn { width: 100%; background: linear-gradient(135deg, var(--accent), #f97316); border: none; border-radius: 13px; padding: 16px; color: #1a1a2e; font-family: 'Rubik', sans-serif; font-size: 1rem; font-weight: 800; cursor: pointer; transition: all 0.2s; box-shadow: 0 6px 24px rgba(249,199,79,0.3); }
+        .continue-btn:hover { transform: translateY(-2px); }
+
+        /* ===== FINAL SCREEN ===== */
+        #final-container { display: none; width: 100%; max-width: 480px; position: relative; z-index: 1; flex-direction: column; gap: 14px; }
+        #final-container.show { display: flex; }
+
+        .footer { color: var(--muted); font-size: 0.73rem; margin-top: 18px; margin-bottom: 8px; text-align: center; position: relative; z-index: 1; }
+
+        @keyframes fadeSlideIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+        .question-card, .options-grid { animation: fadeSlideIn 0.3s ease forwards; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-title">🔢 חשבון כיתה ה'</div>
+    <div class="header-sub" id="header-sub">סבב 1 מתוך 5 · שאלות 1–20</div>
+</div>
+
+<!-- Round pips -->
+<div class="round-indicator">
+    <div class="round-pip active" id="pip-0"></div>
+    <div class="round-pip" id="pip-1"></div>
+    <div class="round-pip" id="pip-2"></div>
+    <div class="round-pip" id="pip-3"></div>
+    <div class="round-pip" id="pip-4"></div>
+</div>
+
+<div class="progress-area" id="progress-area">
+    <div class="progress-meta">
+        <span class="pill pill-q" id="progress-text">שאלה 1 מתוך 20</span>
+        <span class="pill pill-s" id="score-text">✓ 0 נכונות</span>
+    </div>
+    <div class="progress-track">
+        <div class="progress-fill" id="progress-bar" style="width: 5%"></div>
+    </div>
+</div>
+
+<!-- Quiz -->
+<div id="quiz-container">
+    <div class="question-card">
+        <span class="topic-badge topic-fractions" id="topic-badge">שברים</span>
+        <div id="question-text">טוען שאלה...</div>
+    </div>
+    <div class="options-grid" id="options-container"></div>
+    <div class="feedback-banner" id="feedback-banner">
+        <span id="feedback-icon">✅</span>
+        <span id="feedback-text">כל הכבוד!</span>
+    </div>
+    <button id="next-btn">המשך ←</button>
+</div>
+
+<!-- Round complete -->
+<div id="round-container">
+    <div class="round-hero">
+        <span class="round-emoji" id="round-emoji">🎉</span>
+        <div class="round-title" id="round-title">סיימת סבב!</div>
+        <div class="round-sub" id="round-sub">סבב 1 מתוך 5</div>
+    </div>
+    <div class="round-score-box">
+        <div class="round-score-num" id="round-score-num">0/20</div>
+        <div class="round-score-lbl" id="round-score-lbl">0% תשובות נכונות בסבב זה</div>
+    </div>
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-val green" id="round-correct">0</div>
+            <div class="stat-lbl">נכונות ✅</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val red" id="round-wrong">0</div>
+            <div class="stat-lbl">שגויות ❌</div>
+        </div>
+    </div>
+    <button class="whatsapp-btn" id="round-whatsapp-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        שלח לאבא את ציון הסבב
+    </button>
+    <button class="continue-btn" id="continue-btn">המשך לסבב הבא 🚀</button>
+</div>
+
+<!-- Final screen -->
+<div id="final-container">
+    <div class="round-hero">
+        <span class="round-emoji" id="final-emoji">🏆</span>
+        <div class="round-title" id="final-title">כל הכבוד!</div>
+        <div class="round-sub">סיימת את כל 100 השאלות!</div>
+    </div>
+    <div class="round-score-box">
+        <div class="round-score-num" id="final-total-score">0/100</div>
+        <div class="round-score-lbl" id="final-total-pct">0% ציון כולל</div>
+    </div>
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-val green" id="final-correct">0</div>
+            <div class="stat-lbl">סה"כ נכונות ✅</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val red" id="final-wrong">0</div>
+            <div class="stat-lbl">סה"כ שגויות ❌</div>
+        </div>
+    </div>
+    <!-- Per-round summary -->
+    <div id="rounds-summary" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <button class="whatsapp-btn" id="final-whatsapp-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        שלח לאבא את הציון הסופי
+    </button>
+</div>
+
+<div class="footer">בהצלחה! לומדים חשבון בכיף 📐</div>
+
+<script>
+const PARENT_PHONE = "972542584032";
+const ROUND_SIZE = 20;
+
+// ── Fraction helpers ──────────────────────────────────────────────
+function f(n, d) { return `<span class="frac"><span class="num">${n}</span><span class="den">${d}</span></span>`; }
+function m(w, n, d) { return `<span class="mixed"><span class="whole">${w}</span>${f(n,d)}</span>`; }
+function gcd(a,b){ return b===0?a:gcd(b,a%b); }
+function simplify(n,d){ const g=gcd(Math.abs(n),Math.abs(d)); return [n/g, d/g]; }
+function fStr(n,d){ const [sn,sd]=simplify(n,d); return sd===1?`${sn}`:`${sn}/${sd}`; }
+
+// ── Sound ─────────────────────────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+function getCtx(){ if(!audioCtx) audioCtx=new AudioCtx(); return audioCtx; }
+function playCorrect(){
+    const ctx=getCtx(), now=ctx.currentTime;
+    [523.25,659.25,783.99].forEach((freq,i)=>{
+        const o=ctx.createOscillator(), g=ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type="sine"; o.frequency.value=freq;
+        g.gain.setValueAtTime(0,now+i*0.1);
+        g.gain.linearRampToValueAtTime(0.25,now+i*0.1+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,now+i*0.1+0.35);
+        o.start(now+i*0.1); o.stop(now+i*0.1+0.35);
+    });
+}
+function playWrong(){
+    const ctx=getCtx(), now=ctx.currentTime;
+    [220,196].forEach((freq,i)=>{
+        const o=ctx.createOscillator(), g=ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type="sawtooth"; o.frequency.value=freq;
+        g.gain.setValueAtTime(0,now+i*0.18);
+        g.gain.linearRampToValueAtTime(0.2,now+i*0.18+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,now+i*0.18+0.3);
+        o.start(now+i*0.18); o.stop(now+i*0.18+0.3);
+    });
+}
+
+// ── Topic labels ──────────────────────────────────────────────────
+const TOPICS = {
+    fractions:   { label:"צמצום והרחבת שברים",  badge:"topic-fractions" },
+    add:         { label:"חיבור שברים",          badge:"topic-add" },
+    sub:         { label:"חיסור שברים",          badge:"topic-sub" },
+    lcd:         { label:"מכנה משותף",           badge:"topic-lcd" },
+    numberLine:  { label:"ציר המספרים",          badge:"topic-number-line" },
+    decimals:    { label:"מספרים עשרוניים",      badge:"topic-decimals" },
+};
+
+// ── All 100 questions (difficulty rising) ─────────────────────────
+// Each: { topic, q:()=>html, options:()=>[html,...], correct:idx, correctText:string }
+const questions = [
+
+// ══════════════════════════════════════════════════════════════════
+// ROUND 1 (Q1–20): Simplify / expand, same-denominator add & sub, number line basics
+// ══════════════════════════════════════════════════════════════════
+
+// Q1
+{ topic:"fractions", q:()=>`צמצם: ${f(2,4)}`, options:()=>[f(1,2),f(2,2),f(1,4),f(3,4)], correct:0, correctText:"1/2" },
+// Q2
+{ topic:"fractions", q:()=>`צמצם: ${f(3,9)}`, options:()=>[f(1,3),f(2,3),f(3,3),f(1,9)], correct:0, correctText:"1/3" },
+// Q3
+{ topic:"fractions", q:()=>`צמצם: ${f(4,8)}`, options:()=>[f(1,2),f(2,4),f(1,4),f(3,8)], correct:0, correctText:"1/2" },
+// Q4
+{ topic:"fractions", q:()=>`הרחב את ${f(1,3)} פי 3`, options:()=>[f(3,9),f(2,6),f(1,9),f(3,3)], correct:0, correctText:"3/9" },
+// Q5
+{ topic:"fractions", q:()=>`הרחב את ${f(2,5)} פי 2`, options:()=>[f(4,10),f(2,10),f(4,5),f(4,7)], correct:0, correctText:"4/10" },
+// Q6
+{ topic:"add", q:()=>`חשב: ${f(1,5)} + ${f(2,5)} =`, options:()=>[f(3,5),f(3,10),f(2,5),f(1,5)], correct:0, correctText:"3/5" },
+// Q7
+{ topic:"add", q:()=>`חשב: ${f(2,7)} + ${f(3,7)} =`, options:()=>[f(5,7),f(5,14),f(6,7),f(1,7)], correct:0, correctText:"5/7" },
+// Q8
+{ topic:"sub", q:()=>`חשב: ${f(4,5)} − ${f(1,5)} =`, options:()=>[f(3,5),f(3,10),f(5,5),f(4,10)], correct:0, correctText:"3/5" },
+// Q9
+{ topic:"sub", q:()=>`חשב: ${f(7,8)} − ${f(3,8)} =`, options:()=>[f(4,8),f(1,2),f(3,8),f(5,8)], correct:0, correctText:"4/8 = 1/2" },
+// Q10
+{ topic:"fractions", q:()=>`איזה שבר שווה ל-${f(1,2)}?`, options:()=>[f(2,4),f(1,4),f(3,4),f(2,3)], correct:0, correctText:"2/4" },
+// Q11
+{ topic:"fractions", q:()=>`איזה שבר שווה ל-${f(2,3)}?`, options:()=>[f(4,6),f(3,6),f(2,6),f(4,9)], correct:0, correctText:"4/6" },
+// Q12
+{ topic:"add", q:()=>`חשב: ${f(1,6)} + ${f(3,6)} =`, options:()=>[f(4,6),f(2,3),f(4,12),f(3,6)], correct:0, correctText:"4/6" },
+// Q13
+{ topic:"sub", q:()=>`חשב: ${f(5,6)} − ${f(2,6)} =`, options:()=>[f(3,6),f(1,2),f(2,6),f(4,6)], correct:0, correctText:"3/6 = 1/2" },
+// Q14
+{ topic:"numberLine", q:()=>`מהו המספר בדיוק באמצע בין 0 ל-1?`, options:()=>[f(1,4),f(1,2),f(3,4),"0.2"], correct:1, correctText:"1/2" },
+// Q15
+{ topic:"numberLine", q:()=>`ציר מחולק ל-4. מהי הנקודה הראשונה אחרי 0?`, options:()=>[f(1,4),f(1,2),f(1,3),"0.4"], correct:0, correctText:"1/4" },
+// Q16
+{ topic:"decimals", q:()=>`${f(1,2)} כמספר עשרוני:`, options:()=>["0.2","0.5","0.12","0.05"], correct:1, correctText:"0.5" },
+// Q17
+{ topic:"decimals", q:()=>`${f(1,4)} כמספר עשרוני:`, options:()=>["0.4","0.14","0.25","0.5"], correct:2, correctText:"0.25" },
+// Q18
+{ topic:"decimals", q:()=>`0.7 כשבר:`, options:()=>[f(7,100),f(7,10),f(1,7),f(7,1000)], correct:1, correctText:"7/10" },
+// Q19
+{ topic:"fractions", q:()=>`צמצם: ${f(6,9)}`, options:()=>[f(2,3),f(3,9),f(1,3),f(3,4)], correct:0, correctText:"2/3" },
+// Q20
+{ topic:"fractions", q:()=>`${f(1,3)} = ${f("?",9)}  המונה החסר:`, options:()=>["2","3","4","6"], correct:1, correctText:"3" },
+
+// ══════════════════════════════════════════════════════════════════
+// ROUND 2 (Q21–40): LCD intro, add/sub different denominators (easy)
+// ══════════════════════════════════════════════════════════════════
+
+// Q21
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2 ו-4?`, options:()=>["2","4","6","8"], correct:1, correctText:"4" },
+// Q22
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3 ו-6?`, options:()=>["3","6","9","12"], correct:1, correctText:"6" },
+// Q23
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2 ו-3?`, options:()=>["4","5","6","9"], correct:2, correctText:"6" },
+// Q24
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 4 ו-6?`, options:()=>["8","10","12","24"], correct:2, correctText:"12" },
+// Q25
+{ topic:"add", q:()=>`חשב: ${f(1,2)} + ${f(1,4)} =`, options:()=>[f(2,6),f(3,4),f(2,4),f(1,4)], correct:1, correctText:"3/4" },
+// Q26
+{ topic:"add", q:()=>`חשב: ${f(1,3)} + ${f(1,6)} =`, options:()=>[f(2,9),f(1,2),f(3,9),f(2,6)], correct:1, correctText:"1/2" },
+// Q27
+{ topic:"add", q:()=>`חשב: ${f(1,4)} + ${f(1,4)} =`, options:()=>[f(1,2),f(2,8),f(1,4),f(2,4)], correct:0, correctText:"1/2" },
+// Q28
+{ topic:"sub", q:()=>`חשב: ${f(3,4)} − ${f(1,2)} =`, options:()=>[f(2,2),f(1,4),f(1,2),f(2,4)], correct:1, correctText:"1/4" },
+// Q29
+{ topic:"sub", q:()=>`חשב: ${f(5,6)} − ${f(1,3)} =`, options:()=>[f(4,3),f(1,2),f(4,6),f(1,3)], correct:1, correctText:"1/2" },
+// Q30
+{ topic:"add", q:()=>`חשב: ${f(1,2)} + ${f(1,6)} =`, options:()=>[f(2,8),f(2,6),f(4,6),f(1,3)], correct:2, correctText:"4/6 = 2/3" },
+// Q31
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 5 ו-10?`, options:()=>["5","10","15","20"], correct:1, correctText:"10" },
+// Q32
+{ topic:"add", q:()=>`חשב: ${f(2,5)} + ${f(1,10)} =`, options:()=>[f(3,15),f(5,10),f(1,2),f(3,10)], correct:1, correctText:"5/10 = 1/2" },
+// Q33
+{ topic:"sub", q:()=>`חשב: ${f(7,10)} − ${f(1,5)} =`, options:()=>[f(6,5),f(1,2),f(5,10),f(3,10)], correct:1, correctText:"1/2" },
+// Q34
+{ topic:"add", q:()=>`חשב: ${f(1,3)} + ${f(1,3)} =`, options:()=>[f(2,3),f(2,6),f(1,6),f(3,3)], correct:0, correctText:"2/3" },
+// Q35
+{ topic:"sub", q:()=>`חשב: 1 − ${f(1,4)} =`, options:()=>[f(3,4),f(1,4),f(2,4),f(4,4)], correct:0, correctText:"3/4" },
+// Q36
+{ topic:"sub", q:()=>`חשב: 1 − ${f(2,3)} =`, options:()=>[f(2,3),f(1,3),f(1,4),f(3,3)], correct:1, correctText:"1/3" },
+// Q37
+{ topic:"fractions", q:()=>`צמצם: ${f(8,12)}`, options:()=>[f(2,3),f(4,6),f(3,4),f(2,4)], correct:0, correctText:"2/3" },
+// Q38
+{ topic:"fractions", q:()=>`צמצם: ${f(10,15)}`, options:()=>[f(1,2),f(2,3),f(3,5),f(5,8)], correct:1, correctText:"2/3" },
+// Q39
+{ topic:"decimals", q:()=>`${f(3,4)} כמספר עשרוני:`, options:()=>["0.34","0.3","0.75","0.43"], correct:2, correctText:"0.75" },
+// Q40
+{ topic:"decimals", q:()=>`0.25 כשבר:`, options:()=>[f(1,4),f(2,5),f(1,2),f(25,10)], correct:0, correctText:"1/4" },
+
+// ══════════════════════════════════════════════════════════════════
+// ROUND 3 (Q41–60): LCD with 3 and 4, harder add/sub, mixed numbers intro
+// ══════════════════════════════════════════════════════════════════
+
+// Q41
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3 ו-4?`, options:()=>["6","8","12","24"], correct:2, correctText:"12" },
+// Q42
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 4 ו-5?`, options:()=>["10","16","20","24"], correct:2, correctText:"20" },
+// Q43
+{ topic:"add", q:()=>`חשב: ${f(1,3)} + ${f(1,4)} =`, options:()=>[f(2,7),f(7,12),f(5,12),f(4,12)], correct:1, correctText:"7/12" },
+// Q44
+{ topic:"add", q:()=>`חשב: ${f(1,4)} + ${f(2,3)} =`, options:()=>[f(3,7),f(11,12),f(9,12),f(3,12)], correct:1, correctText:"11/12" },
+// Q45
+{ topic:"sub", q:()=>`חשב: ${f(3,4)} − ${f(1,3)} =`, options:()=>[f(2,1),f(5,12),f(7,12),f(1,4)], correct:1, correctText:"5/12" },
+// Q46
+{ topic:"sub", q:()=>`חשב: ${f(2,3)} − ${f(1,4)} =`, options:()=>[f(1,7),f(5,12),f(7,12),f(1,3)], correct:1, correctText:"5/12" },
+// Q47
+{ topic:"add", q:()=>`חשב: ${f(2,5)} + ${f(1,3)} =`, options:()=>[f(3,8),f(11,15),f(7,15),f(3,15)], correct:1, correctText:"11/15" },
+// Q48
+{ topic:"sub", q:()=>`חשב: ${f(4,5)} − ${f(1,3)} =`, options:()=>[f(3,2),f(7,15),f(5,15),f(3,15)], correct:1, correctText:"7/15" },
+// Q49
+{ topic:"add", q:()=>`חשב: ${f(3,8)} + ${f(1,4)} =`, options:()=>[f(4,12),f(5,8),f(4,8),f(5,12)], correct:1, correctText:"5/8" },
+// Q50
+{ topic:"sub", q:()=>`חשב: ${f(7,8)} − ${f(1,4)} =`, options:()=>[f(6,4),f(5,8),f(6,8),f(4,8)], correct:1, correctText:"5/8" },
+// Q51
+{ topic:"add", q:()=>`חשב: ${f(1,6)} + ${f(1,4)} =`, options:()=>[f(2,10),f(5,12),f(3,10),f(4,12)], correct:1, correctText:"5/12" },
+// Q52
+{ topic:"sub", q:()=>`חשב: ${f(5,6)} − ${f(3,4)} =`, options:()=>[f(2,2),f(1,12),f(3,12),f(7,12)], correct:1, correctText:"1/12" },
+// Q53
+{ topic:"add", q:()=>`חשב: ${f(3,10)} + ${f(2,5)} =`, options:()=>[f(5,15),f(7,10),f(5,10),f(1,2)], correct:1, correctText:"7/10" },
+// Q54
+{ topic:"fractions", q:()=>`צמצם: ${f(12,16)}`, options:()=>[f(3,4),f(4,6),f(6,8),f(2,3)], correct:0, correctText:"3/4" },
+// Q55
+{ topic:"fractions", q:()=>`צמצם: ${f(15,20)}`, options:()=>[f(3,4),f(5,8),f(2,3),f(3,5)], correct:0, correctText:"3/4" },
+// Q56 — mixed number add (same denom)
+{ topic:"add", q:()=>`חשב: ${m(1,1,4)} + ${f(2,4)} =`, options:()=>[m(1,3,4),`2`,m(2,1,4),m(1,2,4)], correct:0, correctText:"1 ו-3/4" },
+// Q57
+{ topic:"add", q:()=>`חשב: ${m(2,1,3)} + ${f(1,3)} =`, options:()=>[ m(2,2,3), `3`, m(3,1,3), m(2,1,6) ], correct:0, correctText:"2 ו-2/3" },
+// Q58
+{ topic:"sub", q:()=>`חשב: ${m(1,3,4)} − ${f(1,4)} =`, options:()=>[ m(1,2,4), m(1,1,2), m(1,1,4), `1` ], correct:0, correctText:"1 ו-2/4 = 1 ו-1/2" },
+// Q59
+{ topic:"numberLine", q:()=>`היכן ממוקם ${m(2,1,2)} על ציר המספרים?`, options:()=>["בין 1 ל-2","בדיוק באמצע בין 2 ל-3","בין 3 ל-4","בין 0 ל-1"], correct:1, correctText:"בין 2 ל-3" },
+// Q60
+{ topic:"decimals", q:()=>`${m(1,3,10)} כמספר עשרוני:`, options:()=>["0.13","1.03","1.3","3.1"], correct:2, correctText:"1.3" },
+
+// ══════════════════════════════════════════════════════════════════
+// ROUND 4 (Q61–80): Harder LCD, mixed numbers add/sub, improper fractions
+// ══════════════════════════════════════════════════════════════════
+
+// Q61
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 6 ו-8?`, options:()=>["12","18","24","48"], correct:2, correctText:"24" },
+// Q62
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 9 ו-6?`, options:()=>["18","27","36","54"], correct:0, correctText:"18" },
+// Q63
+{ topic:"add", q:()=>`חשב: ${f(5,6)} + ${f(1,8)} =`, options:()=>[f(6,14),f(23,24),f(13,24),f(6,8)], correct:1, correctText:"23/24" },
+// Q64
+{ topic:"sub", q:()=>`חשב: ${f(7,9)} − ${f(1,6)} =`, options:()=>[f(6,3),f(11,18),f(13,18),f(5,9)], correct:1, correctText:"11/18" },
+// Q65
+{ topic:"add", q:()=>`חשב: ${m(1,1,2)} + ${m(1,1,3)} =`, options:()=>[ m(2,5,6), m(2,2,5), `3`, m(3,1,6) ], correct:0, correctText:"2 ו-5/6" },
+// Q66
+{ topic:"add", q:()=>`חשב: ${m(2,3,4)} + ${m(1,1,4)} =`, options:()=>[ `4`, m(3,4,8), m(4,1,4), m(3,1,2) ], correct:0, correctText:"4" },
+// Q67
+{ topic:"sub", q:()=>`חשב: ${m(3,1,2)} − ${m(1,1,4)} =`, options:()=>[ m(2,1,4), m(2,3,4), m(2,1,2), m(2,1,6) ], correct:0, correctText:"2 ו-1/4" },
+// Q68
+{ topic:"sub", q:()=>`חשב: ${m(4,2,3)} − ${m(2,1,3)} =`, options:()=>[ m(2,1,3), m(2,2,3), `2`, m(3,1,3) ], correct:0, correctText:"2 ו-1/3" },
+// Q69 — improper → mixed
+{ topic:"fractions", q:()=>`המר לשבר מעורב: ${f(7,3)}`, options:()=>[ m(2,1,3), m(1,4,3), m(3,1,7), m(2,2,3) ], correct:0, correctText:"2 ו-1/3" },
+// Q70
+{ topic:"fractions", q:()=>`המר לשבר מעורב: ${f(11,4)}`, options:()=>[ m(2,3,4), m(3,1,4), m(2,1,4), m(3,3,4) ], correct:0, correctText:"2 ו-3/4" },
+// Q71
+{ topic:"fractions", q:()=>`המר לשבר לא אמיתי: ${m(3,1,2)}`, options:()=>[f(7,2),f(5,2),f(6,2),f(8,3)], correct:0, correctText:"7/2" },
+// Q72
+{ topic:"fractions", q:()=>`המר לשבר לא אמיתי: ${m(2,2,3)}`, options:()=>[f(8,3),f(6,3),f(4,3),f(7,3)], correct:0, correctText:"8/3" },
+// Q73
+{ topic:"add", q:()=>`חשב: ${f(3,8)} + ${f(5,6)} =`, options:()=>[f(8,14),f(29,24),f(19,24),f(8,24)], correct:1, correctText:"29/24" },
+// Q74
+{ topic:"sub", q:()=>`חשב: ${m(2,1,4)} − ${f(3,4)} =`, options:()=>[ m(1,2,4), m(1,1,2), m(1,3,4), m(2,1,2) ], correct:1, correctText:"1 ו-1/2" },
+// Q75
+{ topic:"add", q:()=>`חשב: ${f(2,9)} + ${f(1,6)} =`, options:()=>[f(3,15),f(7,18),f(5,18),f(4,9)], correct:1, correctText:"7/18" },
+// Q76
+{ topic:"sub", q:()=>`חשב: ${f(5,6)} − ${f(2,9)} =`, options:()=>[f(3,3),f(11,18),f(7,18),f(1,2)], correct:1, correctText:"11/18" },
+// Q77
+{ topic:"decimals", q:()=>`${f(4,5)} כמספר עשרוני:`, options:()=>["0.45","0.4","0.8","0.08"], correct:2, correctText:"0.8" },
+// Q78
+{ topic:"decimals", q:()=>`0.04 כשבר:`, options:()=>[f(4,10),f(4,100),f(4,1000),f(1,4)], correct:1, correctText:"4/100" },
+// Q79
+{ topic:"numberLine", q:()=>`${f(4,5)} על ציר — קרוב יותר ל:`, options:()=>["0","0.5","1","2"], correct:2, correctText:"1" },
+// Q80
+{ topic:"fractions", q:()=>`צמצם: ${f(18,24)}`, options:()=>[f(3,4),f(4,6),f(9,12),f(2,3)], correct:0, correctText:"3/4" },
+
+// ══════════════════════════════════════════════════════════════════
+// ROUND 5 (Q81–100): Challenge — LCD with 3+ numbers, mixed add/sub with borrowing, word problems
+// ══════════════════════════════════════════════════════════════════
+
+// Q81
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2, 3 ו-4?`, options:()=>["6","8","12","24"], correct:2, correctText:"12" },
+// Q82
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3, 4 ו-6?`, options:()=>["12","18","24","36"], correct:0, correctText:"12" },
+// Q83 — borrowing
+{ topic:"sub", q:()=>`חשב: ${m(3,1,4)} − ${m(1,3,4)} =`, options:()=>[ m(1,2,4), m(1,1,2), m(2,1,2), m(1,3,4) ], correct:1, correctText:"1 ו-1/2" },
+// Q84
+{ topic:"sub", q:()=>`חשב: ${m(4,1,3)} − ${m(2,2,3)} =`, options:()=>[ m(1,2,3), m(2,1,3), m(2,2,3), m(1,1,3) ], correct:0, correctText:"1 ו-2/3" },
+// Q85
+{ topic:"add", q:()=>`חשב: ${m(2,5,6)} + ${m(1,3,4)} =`, options:()=>[ m(4,7,12), m(3,8,10), m(4,1,2), m(5,7,12) ], correct:0, correctText:"4 ו-7/12" },
+// Q86
+{ topic:"add", q:()=>`חשב: ${f(1,2)} + ${f(1,3)} + ${f(1,6)} =`, options:()=>["1",f(3,11),f(1,2),f(5,6)], correct:0, correctText:"1" },
+// Q87
+{ topic:"add", q:()=>`חשב: ${f(1,4)} + ${f(1,3)} + ${f(1,6)} =`, options:()=>[f(3,13),f(9,12),f(3,4),f(11,12)], correct:2, correctText:"3/4" },
+// Q88
+{ topic:"sub", q:()=>`חשב: ${m(5,1,6)} − ${m(2,5,6)} =`, options:()=>[ m(2,2,6), m(2,1,3), m(3,2,6), m(2,4,6) ], correct:1, correctText:"2 ו-1/3" },
+// Q89
+{ topic:"fractions", q:()=>`המר לשבר לא אמיתי: ${m(4,3,5)}`, options:()=>[f(23,5),f(19,5),f(22,5),f(20,5)], correct:0, correctText:"23/5" },
+// Q90
+{ topic:"fractions", q:()=>`המר לשבר מעורב: ${f(17,6)}`, options:()=>[ m(2,5,6), m(3,1,6), m(2,4,6), m(3,5,6) ], correct:0, correctText:"2 ו-5/6" },
+// Q91
+{ topic:"add", q:()=>`חשב: ${f(7,12)} + ${f(5,8)} =`, options:()=>[f(12,20),f(29,24),f(12,24),f(19,24)], correct:1, correctText:"29/24" },
+// Q92
+{ topic:"sub", q:()=>`חשב: ${f(11,12)} − ${f(3,8)} =`, options:()=>[f(8,4),f(13,24),f(8,12),f(5,12)], correct:1, correctText:"13/24" },
+// Q93 — word problem
+{ topic:"add", q:()=>`דנה אכלה ${f(1,4)} מהפיצה ויוסי אכל ${f(3,8)}. כמה אכלו יחד?`, options:()=>[f(4,12),f(5,8),f(4,8),f(2,8)], correct:1, correctText:"5/8" },
+// Q94
+{ topic:"sub", q:()=>`היה ${f(7,8)} ק"ג קמח. השתמשו ב-${f(1,4)} ק"ג. כמה נשאר?`, options:()=>[f(6,4),f(5,8),f(6,8),f(3,8)], correct:1, correctText:"5/8" },
+// Q95
+{ topic:"add", q:()=>`הוסף: ${m(1,2,3)} + ${m(2,3,4)} =`, options:()=>[ m(4,5,12), m(3,5,7), m(3,1,2), m(4,7,12) ], correct:0, correctText:"4 ו-5/12" },
+// Q96
+{ topic:"sub", q:()=>`${m(6,1,5)} − ${m(3,4,5)} =`, options:()=>[ m(2,2,5), m(3,2,5), m(2,3,5), m(3,3,5) ], correct:0, correctText:"2 ו-2/5" },
+// Q97
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 6, 9 ו-12?`, options:()=>["18","24","36","72"], correct:2, correctText:"36" },
+// Q98
+{ topic:"add", q:()=>`חשב: ${f(1,6)} + ${f(2,9)} + ${f(1,12)} =`, options:()=>[f(4,27),f(13,36),f(4,9),f(7,18)], correct:1, correctText:"13/36" },
+// Q99
+{ topic:"sub", q:()=>`חשב: 3 − ${m(1,5,8)} =`, options:()=>[ m(1,3,8), m(2,3,8), m(1,5,8), m(2,5,8) ], correct:0, correctText:"1 ו-3/8" },
+// Q100
+{ topic:"add", q:()=>`חשב: ${m(3,7,10)} + ${m(2,4,15)} =`, options:()=>[ m(6,1,30), m(5,11,15), m(6,1,6), m(5,29,30) ], correct:0, correctText:"6 ו-1/30" },
+
+]; // end questions
+
+// ── State ─────────────────────────────────────────────────────────
+const TOTAL = questions.length;   // 100
+const ROUNDS = TOTAL / ROUND_SIZE; // 5
+
+let currentQ   = 0;   // global question index 0–99
+let totalScore = 0;   // running total correct
+let roundScore = 0;   // correct in current round
+let answered   = false;
+let roundScores = []; // store score per round
+
+// ── DOM refs ──────────────────────────────────────────────────────
+const headerSub      = document.getElementById("header-sub");
+const progressArea   = document.getElementById("progress-area");
+const progressText   = document.getElementById("progress-text");
+const scoreText      = document.getElementById("score-text");
+const progressBar    = document.getElementById("progress-bar");
+const topicBadge     = document.getElementById("topic-badge");
+const questionText   = document.getElementById("question-text");
+const optionsContainer = document.getElementById("options-container");
+const feedbackBanner = document.getElementById("feedback-banner");
+const feedbackIcon   = document.getElementById("feedback-icon");
+const feedbackText   = document.getElementById("feedback-text");
+const nextBtn        = document.getElementById("next-btn");
+const quizContainer  = document.getElementById("quiz-container");
+const roundContainer = document.getElementById("round-container");
+const finalContainer = document.getElementById("final-container");
+
+// ── Helpers ───────────────────────────────────────────────────────
+function currentRound(){ return Math.floor(currentQ / ROUND_SIZE); } // 0-based
+function posInRound(){   return currentQ % ROUND_SIZE; }             // 0-based
+
+function updatePips(){
+    const r = currentRound();
+    for(let i=0;i<ROUNDS;i++){
+        const pip = document.getElementById(`pip-${i}`);
+        pip.className = "round-pip" + (i < r ? " done" : i === r ? " active" : "");
+    }
+}
+
+// ── Load question ─────────────────────────────────────────────────
+function loadQuestion(){
+    answered = false;
+    nextBtn.classList.remove("show");
+    feedbackBanner.classList.remove("show","correct-fb","wrong-fb");
+    optionsContainer.innerHTML = "";
+
+    const r   = currentRound();
+    const pos = posInRound();
+    const q   = questions[currentQ];
+    const ti  = TOPICS[q.topic];
+
+    // Header
+    headerSub.textContent = `סבב ${r+1} מתוך ${ROUNDS} · שאלות ${r*ROUND_SIZE+1}–${(r+1)*ROUND_SIZE}`;
+    updatePips();
+
+    // Progress within round
+    progressText.textContent = `שאלה ${pos+1} מתוך ${ROUND_SIZE} (סבב ${r+1})`;
+    scoreText.textContent    = `✓ ${roundScore} נכונות`;
+    progressBar.style.width  = `${((pos+1)/ROUND_SIZE)*100}%`;
+
+    topicBadge.textContent = ti.label;
+    topicBadge.className   = `topic-badge ${ti.badge}`;
+    questionText.innerHTML = q.q();
+
+    const LETTERS = ["א","ב","ג","ד"];
+    q.options().forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerHTML = `<span class="opt-letter">${LETTERS[i]}</span><span>${opt}</span>`;
+        btn.addEventListener("click", () => selectOption(i, btn));
+        optionsContainer.appendChild(btn);
+    });
+}
+
+// ── Select answer ─────────────────────────────────────────────────
+function selectOption(selectedIdx, selectedBtn){
+    if(answered) return;
+    answered = true;
+
+    const correct  = questions[currentQ].correct;
+    const allBtns  = optionsContainer.querySelectorAll(".option-btn");
+    const isLastInRound = (posInRound() === ROUND_SIZE - 1);
+    const isLastQ       = (currentQ === TOTAL - 1);
+
+    if(selectedIdx === correct){
+        selectedBtn.classList.add("correct");
+        totalScore++; roundScore++;
+        scoreText.textContent = `✓ ${roundScore} נכונות`;
+        feedbackBanner.classList.add("show","correct-fb");
+        feedbackIcon.textContent = "✅";
+        feedbackText.textContent = "כל הכבוד! תשובה נכונה! 🎉";
+        playCorrect();
+    } else {
+        selectedBtn.classList.add("wrong");
+        allBtns[correct].classList.add("correct");
+        feedbackBanner.classList.add("show","wrong-fb");
+        feedbackIcon.textContent = "❌";
+        feedbackText.textContent = `לא נכון. התשובה הנכונה: ${questions[currentQ].correctText}`;
+        playWrong();
+    }
+
+    allBtns.forEach((b,i)=>{ b.disabled=true; if(i!==selectedIdx&&i!==correct) b.classList.add("dimmed"); });
+
+    nextBtn.classList.add("show");
+    nextBtn.textContent = isLastQ ? "לצפייה בתוצאות 🏆" : isLastInRound ? "לסיום הסבב 🎉" : "המשך ←";
+}
+
+// ── Next button ───────────────────────────────────────────────────
+nextBtn.addEventListener("click", ()=>{
+    const isLastInRound = (posInRound() === ROUND_SIZE - 1);
+    const isLastQ       = (currentQ === TOTAL - 1);
+
+    currentQ++;
+
+    if(isLastInRound || isLastQ){
+        showRoundComplete(isLastQ);
+    } else {
+        loadQuestion();
+    }
+});
+
+// ── Round complete screen ─────────────────────────────────────────
+function showRoundComplete(isFinal){
+    const r = isFinal ? ROUNDS - 1 : currentRound() - 1;
+    roundScores.push(roundScore);
+
+    quizContainer.style.display = "none";
+    progressArea.style.display  = "none";
+
+    if(isFinal){
+        showFinalResults();
+        return;
+    }
+
+    roundContainer.classList.add("show");
+
+    const pct = Math.round((roundScore / ROUND_SIZE) * 100);
+    document.getElementById("round-emoji").textContent = pct>=80?"🏆":pct>=60?"😊":"💪";
+    document.getElementById("round-title").textContent = pct>=80?"מצוין!":pct>=60?"כל הכבוד!":"נסה שוב בסבב הבא!";
+    document.getElementById("round-sub").textContent   = `סבב ${r+1} מתוך ${ROUNDS}`;
+    document.getElementById("round-score-num").textContent = `${roundScore}/${ROUND_SIZE}`;
+    document.getElementById("round-score-lbl").textContent = `${pct}% תשובות נכונות`;
+    document.getElementById("round-correct").textContent   = roundScore;
+    document.getElementById("round-wrong").textContent     = ROUND_SIZE - roundScore;
+
+    // WhatsApp button
+    const waBtn = document.getElementById("round-whatsapp-btn");
+    waBtn.onclick = () => {
+        const msg = encodeURIComponent(
+            `היי אבא! 👋\n` +
+            `סיימתי סבב ${r+1} מתוך ${ROUNDS}! 📐\n\n` +
+            `ציון הסבב: *${roundScore} מתוך ${ROUND_SIZE}* (${pct}%)\n` +
+            `נכונות: ${roundScore} ✅  שגויות: ${ROUND_SIZE-roundScore} ❌\n\n` +
+            `ציון כולל עד עכשיו: ${totalScore}/${r===ROUNDS-1?TOTAL:(r+1)*ROUND_SIZE}\n\n` +
+            `${pct>=80?"הייתי מצוין! 🔥":pct>=60?"עשיתי מאמץ 💪":"אתאמן עוד 📚"}`
+        );
+        window.open(`https://wa.me/${PARENT_PHONE}?text=${msg}`, '_blank');
+    };
+
+    // Continue button
+    document.getElementById("continue-btn").onclick = () => {
+        roundContainer.classList.remove("show");
+        quizContainer.style.display = "";
+        progressArea.style.display  = "";
+        roundScore = 0; // reset round score
+        updatePips();
+        loadQuestion();
+    };
+}
+
+// ── Final results ─────────────────────────────────────────────────
+function showFinalResults(){
+    // last round score was already pushed
+    finalContainer.classList.add("show");
+
+    const pct = Math.round((totalScore / TOTAL) * 100);
+    document.getElementById("final-emoji").textContent = pct>=80?"🏆":pct>=60?"😊":"💪";
+    document.getElementById("final-title").textContent = pct>=80?"כל הכבוד!":pct>=60?"עבודה טובה!":"אפשר עוד!";
+    document.getElementById("final-total-score").textContent = `${totalScore}/${TOTAL}`;
+    document.getElementById("final-total-pct").textContent   = `${pct}% ציון כולל`;
+    document.getElementById("final-correct").textContent = totalScore;
+    document.getElementById("final-wrong").textContent   = TOTAL - totalScore;
+
+    // Per-round summary
+    const summaryDiv = document.getElementById("rounds-summary");
+    summaryDiv.innerHTML = "";
+    roundScores.forEach((s,i)=>{
+        const p = Math.round((s/ROUND_SIZE)*100);
+        const div = document.createElement("div");
+        div.style.cssText = "background:var(--card);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;";
+        div.innerHTML = `<span style="color:var(--muted);font-size:0.85rem;">סבב ${i+1}</span><span style="font-weight:700;color:${p>=80?"var(--accent2)":p>=60?"var(--accent)":"var(--accent3)"};">${s}/${ROUND_SIZE} (${p}%)</span>`;
+        summaryDiv.appendChild(div);
+    });
+
+    document.getElementById("final-whatsapp-btn").onclick = () => {
+        const roundDetail = roundScores.map((s,i)=>`סבב ${i+1}: ${s}/${ROUND_SIZE} (${Math.round(s/ROUND_SIZE*100)}%)`).join("\n");
+        const msg = encodeURIComponent(
+            `היי אבא! 👋\nסיימתי את כל 100 שאלות החשבון! 📐🎉\n\n` +
+            `*ציון סופי: ${totalScore}/100 (${pct}%)*\n\n` +
+            `פירוט לפי סבבים:\n${roundDetail}\n\n` +
+            `${pct>=80?"הייתי מצוין! 🔥":pct>=60?"עשיתי מאמץ 💪":"אתאמן עוד 📚"}`
+        );
+        window.open(`https://wa.me/${PARENT_PHONE}?text=${msg}`, '_blank');
+    };
+}
+
+// ── Start ─────────────────────────────────────────────────────────
+window.onload = loadQuestion;
+</script>
+</body>
+</html>

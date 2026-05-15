@@ -739,12 +739,14 @@ function selectOption(selectedIdx, selectedBtn){
     const isRight = (selectedIdx === correct);
     // Auto push notification via ntfy.sh — fire-and-forget
     const player = getPlayerName();
-    const qPlain   = plainText(questions[currentQ].q());
-    const chosen   = plainText(questions[currentQ].options()[selectedIdx]);
-    const correctT = questions[currentQ].correctText;
-    const body = isRight
-        ? `Q${currentQ+1}: ✅ נכון\n${qPlain} → ${chosen}`
-        : `Q${currentQ+1}: ❌ טעות\n${qPlain}\nבחר: ${chosen}\nנכון: ${correctT}`;
+    const qPlain = plainText(questions[currentQ].q());
+    const LET    = ["א","ב","ג","ד"];
+    const opts   = questions[currentQ].options().map((o,i) => {
+        const txt = plainText(o);
+        const marks = (i === correct ? " ✅" : "") + (i === selectedIdx && i !== correct ? " ⬅️ בחר" : "");
+        return `${LET[i]}) ${txt}${marks}`;
+    }).join("\n");
+    const body = `Q${currentQ+1}: ${isRight ? "✅ נכון" : "❌ טעות"}\n${qPlain}\n${opts}`;
     fetch("https://ntfy.sh/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

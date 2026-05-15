@@ -169,9 +169,43 @@
 
         @keyframes fadeSlideIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
         .question-card, .options-grid { animation: fadeSlideIn 0.3s ease forwards; }
+
+        /* ===== Admin sidebar (visible only when body.admin-mode) ===== */
+        #admin-sidebar { display: none; }
+        body.admin-mode #admin-sidebar {
+            display: block;
+            position: fixed; top: 12px; left: 12px; bottom: 12px;
+            width: 200px; z-index: 1000;
+            background: rgba(22,33,62,0.95);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            padding: 12px 10px;
+            overflow-y: auto;
+            direction: ltr;
+            font-family: 'Rubik', sans-serif;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        body.admin-mode { padding-left: 224px; }
+        .adm-title { font-weight: 700; color: var(--accent); text-align: center; font-size: 0.85rem; margin-bottom: 10px; direction: rtl; }
+        .adm-section { margin-bottom: 12px; }
+        .adm-section-h { color: var(--purple); font-weight: 700; font-size: 0.85rem; margin-bottom: 5px; letter-spacing: 0.5px; }
+        .adm-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+        .adm-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: var(--text); border-radius: 6px; padding: 5px 0; font-size: 0.75rem; cursor: pointer; font-family: inherit; transition: background 0.15s, transform 0.1s; }
+        .adm-btn:hover { background: var(--accent); color: #000; transform: scale(1.05); }
+        .adm-btn.active { background: var(--accent2); color: #000; font-weight: 700; }
+        #adm-exit { width: 100%; margin-top: 8px; background: rgba(249,65,68,0.18); border: 1px solid rgba(249,65,68,0.4); color: var(--text); border-radius: 8px; padding: 6px; font-size: 0.75rem; cursor: pointer; font-family: inherit; direction: rtl; }
+        #adm-exit:hover { background: rgba(249,65,68,0.35); }
+        @media (max-width: 720px) { body.admin-mode { padding-left: 16px; } body.admin-mode #admin-sidebar { width: 160px; } }
     </style>
 </head>
 <body>
+
+<!-- Admin sidebar (hidden unless ?admin=1) -->
+<aside id="admin-sidebar" aria-hidden="true">
+    <div class="adm-title">🛠️ Admin · קפיצה לשאלה</div>
+    <div id="adm-sections"></div>
+    <button id="adm-exit" type="button">יציאה ממצב אדמין</button>
+</aside>
 
 <div class="header">
     <div class="header-title">🔢 חשבון כיתה ה'</div>
@@ -623,6 +657,8 @@ function loadQuestion(){
         btn.addEventListener("click", () => selectOption(i, btn));
         optionsContainer.appendChild(btn);
     });
+
+    if (window.updateAdminActive) updateAdminActive();
 }
 
 // ── Select answer ─────────────────────────────────────────────────
@@ -757,8 +793,61 @@ function showFinalResults(){
     };
 }
 
+// ── Admin sidebar ─────────────────────────────────────────────────
+(function initAdmin(){
+    const params = new URLSearchParams(location.search);
+    if (params.get('admin') === '1') localStorage.setItem('mt_admin', '1');
+    if (params.get('admin') === '0') localStorage.removeItem('mt_admin');
+    if (localStorage.getItem('mt_admin') !== '1') return;
+
+    document.body.classList.add('admin-mode');
+    const SECTIONS = ['A','B','C','D','E'];
+    const host = document.getElementById('adm-sections');
+    SECTIONS.forEach((name, sIdx) => {
+        const sec = document.createElement('div');
+        sec.className = 'adm-section';
+        sec.innerHTML = `<div class="adm-section-h">Section ${name} &nbsp;<span style="opacity:0.6;font-weight:400">(${sIdx*20+1}–${(sIdx+1)*20})</span></div><div class="adm-grid"></div>`;
+        const grid = sec.querySelector('.adm-grid');
+        for (let i = 0; i < 20; i++) {
+            const qIdx = sIdx * 20 + i;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'adm-btn';
+            btn.dataset.q = qIdx;
+            btn.textContent = qIdx + 1;
+            btn.addEventListener('click', () => jumpToQuestion(qIdx));
+            grid.appendChild(btn);
+        }
+        host.appendChild(sec);
+    });
+
+    document.getElementById('adm-exit').addEventListener('click', () => {
+        localStorage.removeItem('mt_admin');
+        location.search = '';
+    });
+
+    window.jumpToQuestion = function(idx){
+        currentQ = idx;
+        roundScore = 0;
+        answered = false;
+        roundContainer.classList.remove('show');
+        finalContainer.classList.remove('show');
+        quizContainer.style.display = '';
+        loadQuestion();
+    };
+
+    window.updateAdminActive = function(){
+        document.querySelectorAll('.adm-btn').forEach(b => {
+            b.classList.toggle('active', Number(b.dataset.q) === currentQ);
+        });
+    };
+})();
+
 // ── Start ─────────────────────────────────────────────────────────
-window.onload = loadQuestion;
+window.onload = function(){
+    loadQuestion();
+    if (window.updateAdminActive) updateAdminActive();
+};
 </script>
 </body>
 </html>

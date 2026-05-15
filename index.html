@@ -64,6 +64,10 @@
         .header { width: 100%; max-width: 480px; text-align: center; margin-bottom: 16px; position: relative; z-index: 1; }
         .header-title { font-family: 'Fredoka One', cursive; font-size: 1.9rem; color: var(--accent); text-shadow: 0 0 24px rgba(249,199,79,0.4); }
         .header-sub { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+        .player-tag { font-size: 0.8rem; color: var(--muted); margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; }
+        .player-tag #player-name { color: var(--accent); font-weight: 700; }
+        .player-tag button { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--text); border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; cursor: pointer; font-family: inherit; }
+        .player-tag button:hover { background: rgba(255,255,255,0.15); }
 
         /* Round indicator */
         .round-indicator {
@@ -210,6 +214,7 @@
 <div class="header">
     <div class="header-title">🔢 חשבון כיתה ה'</div>
     <div class="header-sub" id="header-sub">סבב 1 מתוך 5 · שאלות 1–20</div>
+    <div class="player-tag" id="player-tag">שחקן: <span id="player-name">…</span> <button id="player-change" type="button">שנה</button></div>
 </div>
 
 <!-- Round pips -->
@@ -318,6 +323,15 @@ function getPlayerName(){
         localStorage.setItem("mt_player", name);
     }
     return name;
+}
+function renderPlayerTag(){
+    const el = document.getElementById("player-name");
+    if (el) el.textContent = getPlayerName();
+}
+function changePlayerName(){
+    const cur  = localStorage.getItem("mt_player") || "";
+    const next = (prompt("שם חדש:", cur) || "").trim();
+    if (next) { localStorage.setItem("mt_player", next); renderPlayerTag(); }
 }
 
 // Convert math HTML (with .frac / .mixed spans) to a plain-text exercise string
@@ -897,6 +911,8 @@ function showFinalResults(){
 
 // ── Start ─────────────────────────────────────────────────────────
 window.onload = function(){
+    renderPlayerTag();
+    document.getElementById("player-change").addEventListener("click", changePlayerName);
     loadQuestion();
     if (window.updateAdminActive) updateAdminActive();
 };

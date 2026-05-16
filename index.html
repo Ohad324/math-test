@@ -77,6 +77,40 @@
         #score-display { position: absolute; top: 36px; left: 0; font-family: 'Fredoka One', cursive; color: var(--accent); font-size: 1.15rem; background: rgba(249,199,79,0.12); padding: 3px 12px; border-radius: 100px; border: 1px solid rgba(249,199,79,0.3); }
         @keyframes scoreBump { 0%{transform:scale(1)} 30%{transform:scale(1.25);color:var(--accent2)} 100%{transform:scale(1);color:var(--accent)} }
         #score-display.bump { animation: scoreBump 0.5s ease; }
+
+        /* Celebration emoji burst */
+        #celebrate-layer { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+        .celeb-emoji {
+            position: fixed;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            user-select: none;
+            animation: celebFly 1.3s cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+        }
+        @keyframes celebFly {
+            0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+            15%  { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
+            100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.9) rotate(var(--rot,360deg)); opacity: 0; }
+        }
+
+        /* Floating +N points */
+        .points-pop {
+            position: fixed;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.6rem;
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(249,199,79,0.6), 0 2px 4px rgba(0,0,0,0.6);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            animation: pointsRise 1.1s ease-out forwards;
+        }
+        @keyframes pointsRise {
+            0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20%  { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%, calc(-50% - 90px)) scale(1); opacity: 0; }
+        }
         .player-tag { font-size: 0.8rem; color: var(--muted); margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; }
         .player-tag #player-name { color: var(--accent); font-weight: 700; }
         .player-tag button { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--text); border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; cursor: pointer; font-family: inherit; }
@@ -1465,6 +1499,59 @@ function restartSession(){
     startTimer();
 }
 
+// ── Celebration: emoji burst + floating points ────────────────────
+const CELEBRATION_EMOJIS = ["🎉","⭐","✨","🌟","🎊","💫","🏆","🎯","🥳","🚀"];
+const POSITIVE_MESSAGES  = [
+    "כל הכבוד! 🎉",
+    "מעולה! 🌟",
+    "פנטסטי! 🚀",
+    "וואו, נכון מאוד! ⭐",
+    "כיף לראות! 💪",
+    "אלוף! 🏆",
+    "מצוין! 🎯",
+    "סופר! ✨",
+    "תותח/ית! 💥",
+    "ענק! 🥳"
+];
+function getCelebLayer(){
+    let l = document.getElementById("celebrate-layer");
+    if (!l) { l = document.createElement("div"); l.id = "celebrate-layer"; document.body.appendChild(l); }
+    return l;
+}
+function celebrate(originEl){
+    const rect = originEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const layer = getCelebLayer();
+    for (let i = 0; i < 14; i++) {
+        const e = document.createElement("span");
+        e.className = "celeb-emoji";
+        e.textContent = CELEBRATION_EMOJIS[Math.floor(Math.random()*CELEBRATION_EMOJIS.length)];
+        const angle = -Math.PI/2 + (Math.random() - 0.5) * Math.PI * 1.2; // upward-biased spread
+        const dist = 100 + Math.random() * 160;
+        e.style.left = cx + "px";
+        e.style.top  = cy + "px";
+        e.style.setProperty("--dx", (Math.cos(angle) * dist) + "px");
+        e.style.setProperty("--dy", (Math.sin(angle) * dist) + "px");
+        e.style.setProperty("--rot", (Math.random()*720 - 360) + "deg");
+        e.style.fontSize = (1.1 + Math.random()*1.3) + "rem";
+        e.style.animationDelay = (Math.random()*0.15) + "s";
+        layer.appendChild(e);
+        setTimeout(() => e.remove(), 1600);
+    }
+    // Floating "+N" points
+    const pop = document.createElement("div");
+    pop.className = "points-pop";
+    pop.textContent = `+${POINTS_PER_CORRECT}`;
+    pop.style.left = cx + "px";
+    pop.style.top  = cy + "px";
+    layer.appendChild(pop);
+    setTimeout(() => pop.remove(), 1200);
+}
+function pickMessage(){
+    return POSITIVE_MESSAGES[Math.floor(Math.random() * POSITIVE_MESSAGES.length)];
+}
+
 // ── Lives & score UI ──────────────────────────────────────────────
 function renderLives(){
     document.querySelectorAll(".life").forEach((el, i) => {
@@ -1604,10 +1691,11 @@ function selectOption(selectedIdx, selectedBtn){
         renderScore(true);
         scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
         feedbackBanner.classList.add("show","correct-fb");
-        feedbackIcon.textContent = "✅";
+        feedbackIcon.textContent = "🎉";
         feedbackText.textContent = streak >= STREAK_TARGET
             ? `🎯 רצף ${STREAK_TARGET}! עוברים לקבוצה הבאה! (+${POINTS_PER_CORRECT})`
-            : `כל הכבוד! +${POINTS_PER_CORRECT} נקודות (רצף ${streak}/${STREAK_TARGET}) 🎉`;
+            : `${pickMessage()}  +${POINTS_PER_CORRECT} נק' (רצף ${streak}/${STREAK_TARGET})`;
+        celebrate(selectedBtn);
         playCorrect();
     } else {
         wrongCount++;

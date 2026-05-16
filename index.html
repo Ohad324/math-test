@@ -765,17 +765,16 @@ function selectOption(selectedIdx, selectedBtn){
     } else {
         wrongCount++;
         selectedBtn.classList.add("wrong");
-        allBtns[correct].classList.add("correct");
         feedbackBanner.classList.add("show","wrong-fb");
         feedbackIcon.textContent = "❌";
-        feedbackText.textContent = `לא נכון. התשובה הנכונה: ${q.correctText}`;
+        feedbackText.textContent = "לא נכון. נחזור לשאלה הזו בהמשך 💪";
         playWrong();
         // Re-queue for retry after at least 3 OTHER questions
         retryBucket.push({ qIdx: currentQIdx, eligibleAt: position + RETRY_DELAY });
         scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
     }
 
-    allBtns.forEach((b,i)=>{ b.disabled=true; if(i!==selectedIdx&&i!==correct) b.classList.add("dimmed"); });
+    allBtns.forEach((b,i)=>{ b.disabled=true; if(!isRight && i!==selectedIdx) b.classList.add("dimmed"); });
 
     // Auto push notification via ntfy.sh — fire-and-forget
     const player = getPlayerName();

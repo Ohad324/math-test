@@ -64,6 +64,10 @@
         .header { width: 100%; max-width: 480px; text-align: center; margin-bottom: 16px; position: relative; z-index: 1; }
         .header-title { font-family: 'Fredoka One', cursive; font-size: 1.9rem; color: var(--accent); text-shadow: 0 0 24px rgba(249,199,79,0.4); }
         .header-sub { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+        .timer-display { font-family: 'Fredoka One', cursive; font-size: 1.6rem; color: var(--accent2); margin-top: 6px; letter-spacing: 1px; }
+        .timer-display.warn { color: var(--accent); }
+        .timer-display.danger { color: var(--accent3); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         .player-tag { font-size: 0.8rem; color: var(--muted); margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; }
         .player-tag #player-name { color: var(--accent); font-weight: 700; }
         .player-tag button { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--text); border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; cursor: pointer; font-family: inherit; }
@@ -213,26 +217,17 @@
 
 <div class="header">
     <div class="header-title">🔢 חשבון כיתה ה'</div>
-    <div class="header-sub" id="header-sub">סבב 1 מתוך 5 · שאלות 1–20</div>
+    <div class="timer-display" id="timer-display">⏱ 10:00</div>
     <div class="player-tag" id="player-tag">שחקן: <span id="player-name">…</span> <button id="player-change" type="button">שנה</button></div>
-</div>
-
-<!-- Round pips -->
-<div class="round-indicator">
-    <div class="round-pip active" id="pip-0"></div>
-    <div class="round-pip" id="pip-1"></div>
-    <div class="round-pip" id="pip-2"></div>
-    <div class="round-pip" id="pip-3"></div>
-    <div class="round-pip" id="pip-4"></div>
 </div>
 
 <div class="progress-area" id="progress-area">
     <div class="progress-meta">
-        <span class="pill pill-q" id="progress-text">שאלה 1 מתוך 20</span>
-        <span class="pill pill-s" id="score-text">✓ 0 נכונות</span>
+        <span class="pill pill-q" id="progress-text">שאלה 1</span>
+        <span class="pill pill-s" id="score-text">✓ 0</span>
     </div>
     <div class="progress-track">
-        <div class="progress-fill" id="progress-bar" style="width: 5%"></div>
+        <div class="progress-fill" id="progress-bar" style="width: 1%"></div>
     </div>
 </div>
 
@@ -283,24 +278,26 @@
     <div class="round-hero">
         <span class="round-emoji" id="final-emoji">🏆</span>
         <div class="round-title" id="final-title">כל הכבוד!</div>
-        <div class="round-sub">סיימת את כל 100 השאלות!</div>
+        <div class="round-sub" id="final-sub">הסשן הסתיים</div>
     </div>
     <div class="round-score-box">
         <div class="round-score-num" id="final-total-score">0/100</div>
-        <div class="round-score-lbl" id="final-total-pct">0% ציון כולל</div>
+        <div class="round-score-lbl" id="final-total-pct">ענה נכון</div>
     </div>
     <div class="stats-row">
         <div class="stat-card">
             <div class="stat-val green" id="final-correct">0</div>
-            <div class="stat-lbl">סה"כ נכונות ✅</div>
+            <div class="stat-lbl">נכונות ✅</div>
         </div>
         <div class="stat-card">
             <div class="stat-val red" id="final-wrong">0</div>
-            <div class="stat-lbl">סה"כ שגויות ❌</div>
+            <div class="stat-lbl">טעויות ❌</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val" id="final-time" style="color:var(--accent)">10:00</div>
+            <div class="stat-lbl">זמן ⏱</div>
         </div>
     </div>
-    <!-- Per-round summary -->
-    <div id="rounds-summary" style="display:flex;flex-direction:column;gap:8px;"></div>
     <button class="whatsapp-btn" id="final-whatsapp-btn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         שלח לאבא את הציון הסופי
@@ -632,17 +629,26 @@ const questions = [
 ]; // end questions
 
 // ── State ─────────────────────────────────────────────────────────
-const TOTAL = questions.length;   // 100
-const ROUNDS = TOTAL / ROUND_SIZE; // 5
+const TOTAL          = questions.length;   // 100
+const SESSION_SEC    = 600;                // 10 minutes
+const RETRY_DELAY    = 4;                  // wait at least 3 OTHER questions before retry
+const CORRECT_PAUSE  = 800;                // ms to show ✓ feedback before auto-advance
 
-let currentQ   = 0;   // global question index 0–99
-let totalScore = 0;   // running total correct
-let roundScore = 0;   // correct in current round
-let answered   = false;
-let roundScores = []; // store score per round
+let currentQIdx  = 0;          // question index currently shown
+let queue        = [];         // upcoming question indices (sequential pool)
+let retryBucket  = [];         // [{ qIdx, eligibleAt }]
+let position     = 0;          // 1-based count of questions shown so far
+let correctCount = 0;          // unique questions answered correctly
+let wrongCount   = 0;          // total wrong attempts
+let attempts     = 0;          // total attempts (= position once started)
+let firstTryMap  = {};         // qIdx -> true if answered correctly on first try
+let answered     = false;
+let timeLeft     = SESSION_SEC;
+let timerHandle  = null;
+let sessionEnded = false;
 
 // ── DOM refs ──────────────────────────────────────────────────────
-const headerSub      = document.getElementById("header-sub");
+const timerDisplay   = document.getElementById("timer-display");
 const progressArea   = document.getElementById("progress-area");
 const progressText   = document.getElementById("progress-text");
 const scoreText      = document.getElementById("score-text");
@@ -658,38 +664,65 @@ const quizContainer  = document.getElementById("quiz-container");
 const roundContainer = document.getElementById("round-container");
 const finalContainer = document.getElementById("final-container");
 
-// ── Helpers ───────────────────────────────────────────────────────
-function currentRound(){ return Math.floor(currentQ / ROUND_SIZE); } // 0-based
-function posInRound(){   return currentQ % ROUND_SIZE; }             // 0-based
+// ── Timer ─────────────────────────────────────────────────────────
+function fmtTime(s){
+    const m = Math.floor(s/60), sec = s%60;
+    return `${m}:${sec.toString().padStart(2,"0")}`;
+}
+function renderTimer(){
+    timerDisplay.textContent = `⏱ ${fmtTime(timeLeft)}`;
+    timerDisplay.classList.toggle("warn", timeLeft <= 120 && timeLeft > 30);
+    timerDisplay.classList.toggle("danger", timeLeft <= 30);
+}
+function startTimer(){
+    renderTimer();
+    timerHandle = setInterval(() => {
+        timeLeft--;
+        renderTimer();
+        if (timeLeft <= 0) {
+            clearInterval(timerHandle);
+            timerHandle = null;
+            endSession(true);
+        }
+    }, 1000);
+}
+function stopTimer(){ if (timerHandle) { clearInterval(timerHandle); timerHandle = null; } }
 
-function updatePips(){
-    const r = currentRound();
-    for(let i=0;i<ROUNDS;i++){
-        const pip = document.getElementById(`pip-${i}`);
-        pip.className = "round-pip" + (i < r ? " done" : i === r ? " active" : "");
+// ── Queue management ──────────────────────────────────────────────
+function initQueue(){
+    queue = Array.from({length: TOTAL}, (_,i) => i);
+    retryBucket = [];
+    position = 0;
+}
+function pickNext(){
+    // Find a retry that's eligible now
+    const ready = retryBucket.findIndex(item => item.eligibleAt <= position + 1);
+    if (ready >= 0) return retryBucket.splice(ready, 1)[0].qIdx;
+    // Otherwise next sequential
+    if (queue.length > 0) return queue.shift();
+    // Queue empty — flush remaining retries by earliest eligibility
+    if (retryBucket.length > 0) {
+        retryBucket.sort((a,b) => a.eligibleAt - b.eligibleAt);
+        return retryBucket.shift().qIdx;
     }
+    return null;
 }
 
 // ── Load question ─────────────────────────────────────────────────
 function loadQuestion(){
+    if (sessionEnded) return;
     answered = false;
     nextBtn.classList.remove("show");
     feedbackBanner.classList.remove("show","correct-fb","wrong-fb");
     optionsContainer.innerHTML = "";
 
-    const r   = currentRound();
-    const pos = posInRound();
-    const q   = questions[currentQ];
-    const ti  = TOPICS[q.topic];
+    position++;
+    const q  = questions[currentQIdx];
+    const ti = TOPICS[q.topic];
 
-    // Header
-    headerSub.textContent = `סבב ${r+1} מתוך ${ROUNDS} · שאלות ${r*ROUND_SIZE+1}–${(r+1)*ROUND_SIZE}`;
-    updatePips();
-
-    // Progress within round
-    progressText.textContent = `שאלה ${pos+1} מתוך ${ROUND_SIZE} (סבב ${r+1})`;
-    scoreText.textContent    = `✓ ${roundScore} נכונות`;
-    progressBar.style.width  = `${((pos+1)/ROUND_SIZE)*100}%`;
+    progressText.textContent = `שאלה ${currentQIdx+1}`;
+    scoreText.textContent    = `✓ ${correctCount}  ✗ ${wrongCount}`;
+    progressBar.style.width  = `${(correctCount/TOTAL)*100}%`;
 
     topicBadge.textContent = ti.label;
     topicBadge.className   = `topic-badge ${ti.badge}`;
@@ -709,44 +742,51 @@ function loadQuestion(){
 
 // ── Select answer ─────────────────────────────────────────────────
 function selectOption(selectedIdx, selectedBtn){
-    if(answered) return;
+    if (answered || sessionEnded) return;
     answered = true;
 
-    const correct  = questions[currentQ].correct;
-    const allBtns  = optionsContainer.querySelectorAll(".option-btn");
-    const isLastInRound = (posInRound() === ROUND_SIZE - 1);
-    const isLastQ       = (currentQ === TOTAL - 1);
+    const q       = questions[currentQIdx];
+    const correct = q.correct;
+    const allBtns = optionsContainer.querySelectorAll(".option-btn");
+    const isRight = (selectedIdx === correct);
 
-    if(selectedIdx === correct){
+    if (isRight) {
         selectedBtn.classList.add("correct");
-        totalScore++; roundScore++;
-        scoreText.textContent = `✓ ${roundScore} נכונות`;
+        if (!firstTryMap[currentQIdx]) {
+            firstTryMap[currentQIdx] = true;
+            correctCount++;
+        }
+        scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
+        progressBar.style.width = `${(correctCount/TOTAL)*100}%`;
         feedbackBanner.classList.add("show","correct-fb");
         feedbackIcon.textContent = "✅";
         feedbackText.textContent = "כל הכבוד! תשובה נכונה! 🎉";
         playCorrect();
     } else {
+        wrongCount++;
         selectedBtn.classList.add("wrong");
         allBtns[correct].classList.add("correct");
         feedbackBanner.classList.add("show","wrong-fb");
         feedbackIcon.textContent = "❌";
-        feedbackText.textContent = `לא נכון. התשובה הנכונה: ${questions[currentQ].correctText}`;
+        feedbackText.textContent = `לא נכון. התשובה הנכונה: ${q.correctText}`;
         playWrong();
+        // Re-queue for retry after at least 3 OTHER questions
+        retryBucket.push({ qIdx: currentQIdx, eligibleAt: position + RETRY_DELAY });
+        scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
     }
 
     allBtns.forEach((b,i)=>{ b.disabled=true; if(i!==selectedIdx&&i!==correct) b.classList.add("dimmed"); });
 
-    const isRight = (selectedIdx === correct);
     // Auto push notification via ntfy.sh — fire-and-forget
     const player = getPlayerName();
-    const qPlain = plainText(questions[currentQ].q());
+    const qPlain = plainText(q.q());
     const LET    = ["א","ב","ג","ד"];
-    const opts   = questions[currentQ].options().map((o,i) => {
+    const opts   = q.options().map((o,i) => {
         const txt = plainText(o);
         const marks = (i === correct ? " ✅" : "") + (i === selectedIdx && i !== correct ? " ⬅️ בחר" : "");
         return `${LET[i]}) ${txt}${marks}`;
     }).join("\n");
-    const body = `Q${currentQ+1}: ${isRight ? "✅ נכון" : "❌ טעות"}\n${qPlain}\n${opts}`;
+    const body = `Q${currentQIdx+1}: ${isRight ? "✅ נכון" : "❌ טעות"}\n${qPlain}\n${opts}`;
     fetch("https://ntfy.sh/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -758,107 +798,83 @@ function selectOption(selectedIdx, selectedBtn){
         })
     }).catch(() => {});
 
-    nextBtn.classList.add("show");
-    nextBtn.textContent = isLastQ ? "לצפייה בתוצאות 🏆" : isLastInRound ? "לסיום הסבב 🎉" : "המשך ←";
+    if (isRight) {
+        // Auto-advance after short pause
+        setTimeout(advance, CORRECT_PAUSE);
+    } else {
+        // Wait for child to read the correct answer
+        nextBtn.classList.add("show");
+        nextBtn.textContent = "המשך ←";
+    }
+}
+
+// ── Advance to next question (or end) ─────────────────────────────
+function advance(){
+    if (sessionEnded) return;
+    const next = pickNext();
+    if (next === null) {
+        endSession(false);
+        return;
+    }
+    currentQIdx = next;
+    loadQuestion();
 }
 
 // ── Next button ───────────────────────────────────────────────────
-nextBtn.addEventListener("click", ()=>{
-    const isLastInRound = (posInRound() === ROUND_SIZE - 1);
-    const isLastQ       = (currentQ === TOTAL - 1);
+nextBtn.addEventListener("click", advance);
 
-    currentQ++;
-
-    if(isLastInRound || isLastQ){
-        showRoundComplete(isLastQ);
-    } else {
-        loadQuestion();
-    }
-});
-
-// ── Round complete screen ─────────────────────────────────────────
-function showRoundComplete(isFinal){
-    const r = isFinal ? ROUNDS - 1 : currentRound() - 1;
-    roundScores.push(roundScore);
+// ── End session ───────────────────────────────────────────────────
+function endSession(timeUp){
+    if (sessionEnded) return;
+    sessionEnded = true;
+    stopTimer();
 
     quizContainer.style.display = "none";
     progressArea.style.display  = "none";
-
-    if(isFinal){
-        showFinalResults();
-        return;
-    }
-
-    roundContainer.classList.add("show");
-
-    const pct = Math.round((roundScore / ROUND_SIZE) * 100);
-    document.getElementById("round-emoji").textContent = pct>=80?"🏆":pct>=60?"😊":"💪";
-    document.getElementById("round-title").textContent = pct>=80?"מצוין!":pct>=60?"כל הכבוד!":"נסה שוב בסבב הבא!";
-    document.getElementById("round-sub").textContent   = `סבב ${r+1} מתוך ${ROUNDS}`;
-    document.getElementById("round-score-num").textContent = `${roundScore}/${ROUND_SIZE}`;
-    document.getElementById("round-score-lbl").textContent = `${pct}% תשובות נכונות`;
-    document.getElementById("round-correct").textContent   = roundScore;
-    document.getElementById("round-wrong").textContent     = ROUND_SIZE - roundScore;
-
-    // WhatsApp button
-    const waBtn = document.getElementById("round-whatsapp-btn");
-    waBtn.onclick = () => {
-        const msg = encodeURIComponent(
-            `היי אבא! 👋\n` +
-            `סיימתי סבב ${r+1} מתוך ${ROUNDS}! 📐\n\n` +
-            `ציון הסבב: *${roundScore} מתוך ${ROUND_SIZE}* (${pct}%)\n` +
-            `נכונות: ${roundScore} ✅  שגויות: ${ROUND_SIZE-roundScore} ❌\n\n` +
-            `ציון כולל עד עכשיו: ${totalScore}/${r===ROUNDS-1?TOTAL:(r+1)*ROUND_SIZE}\n\n` +
-            `${pct>=80?"הייתי מצוין! 🔥":pct>=60?"עשיתי מאמץ 💪":"אתאמן עוד 📚"}`
-        );
-        window.open(`https://wa.me/${PARENT_PHONE}?text=${msg}`, '_blank');
-    };
-
-    // Continue button
-    document.getElementById("continue-btn").onclick = () => {
-        roundContainer.classList.remove("show");
-        quizContainer.style.display = "";
-        progressArea.style.display  = "";
-        roundScore = 0; // reset round score
-        updatePips();
-        loadQuestion();
-    };
-}
-
-// ── Final results ─────────────────────────────────────────────────
-function showFinalResults(){
-    // last round score was already pushed
+    roundContainer.classList.remove("show");
     finalContainer.classList.add("show");
 
-    const pct = Math.round((totalScore / TOTAL) * 100);
-    document.getElementById("final-emoji").textContent = pct>=80?"🏆":pct>=60?"😊":"💪";
-    document.getElementById("final-title").textContent = pct>=80?"כל הכבוד!":pct>=60?"עבודה טובה!":"אפשר עוד!";
-    document.getElementById("final-total-score").textContent = `${totalScore}/${TOTAL}`;
-    document.getElementById("final-total-pct").textContent   = `${pct}% ציון כולל`;
-    document.getElementById("final-correct").textContent = totalScore;
-    document.getElementById("final-wrong").textContent   = TOTAL - totalScore;
+    const uniqueShown = TOTAL - queue.length;
+    const pct = Math.round((correctCount / TOTAL) * 100);
+    const timeUsed = SESSION_SEC - timeLeft;
 
-    // Per-round summary
-    const summaryDiv = document.getElementById("rounds-summary");
-    summaryDiv.innerHTML = "";
-    roundScores.forEach((s,i)=>{
-        const p = Math.round((s/ROUND_SIZE)*100);
-        const div = document.createElement("div");
-        div.style.cssText = "background:var(--card);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;";
-        div.innerHTML = `<span style="color:var(--muted);font-size:0.85rem;">סבב ${i+1}</span><span style="font-weight:700;color:${p>=80?"var(--accent2)":p>=60?"var(--accent)":"var(--accent3)"};">${s}/${ROUND_SIZE} (${p}%)</span>`;
-        summaryDiv.appendChild(div);
-    });
+    document.getElementById("final-emoji").textContent = timeUp ? "⏰" : (pct>=80?"🏆":pct>=60?"😊":"💪");
+    document.getElementById("final-title").textContent = timeUp ? "נגמר הזמן!" : (pct>=80?"כל הכבוד!":pct>=60?"עבודה טובה!":"אפשר עוד!");
+    document.getElementById("final-sub").textContent   = timeUp
+        ? `הגעת לשאלה ${uniqueShown} מתוך ${TOTAL}`
+        : `סיימת את כל ${TOTAL} השאלות!`;
+    document.getElementById("final-total-score").textContent = `${correctCount}/${TOTAL}`;
+    document.getElementById("final-total-pct").textContent   = `ענה נכון · ${pct}%`;
+    document.getElementById("final-correct").textContent = correctCount;
+    document.getElementById("final-wrong").textContent   = wrongCount;
+    document.getElementById("final-time").textContent    = fmtTime(timeUsed);
 
     document.getElementById("final-whatsapp-btn").onclick = () => {
-        const roundDetail = roundScores.map((s,i)=>`סבב ${i+1}: ${s}/${ROUND_SIZE} (${Math.round(s/ROUND_SIZE*100)}%)`).join("\n");
+        const player = getPlayerName();
         const msg = encodeURIComponent(
-            `היי אבא! 👋\nסיימתי את כל 100 שאלות החשבון! 📐🎉\n\n` +
-            `*ציון סופי: ${totalScore}/100 (${pct}%)*\n\n` +
-            `פירוט לפי סבבים:\n${roundDetail}\n\n` +
-            `${pct>=80?"הייתי מצוין! 🔥":pct>=60?"עשיתי מאמץ 💪":"אתאמן עוד 📚"}`
+            `היי אבא! 👋\nסיימתי תרגול חשבון 📐\n\n` +
+            `שחקן: ${player}\n` +
+            `${timeUp ? "⏰ נגמר הזמן" : "✅ סיימתי הכל"}\n\n` +
+            `הגעתי לשאלה: *${uniqueShown}/${TOTAL}*\n` +
+            `ענה נכון: *${correctCount}* ✅\n` +
+            `טעויות: *${wrongCount}* ❌\n` +
+            `זמן: *${fmtTime(timeUsed)}*`
         );
         window.open(`https://wa.me/${PARENT_PHONE}?text=${msg}`, '_blank');
     };
+
+    // Auto-notify dad via ntfy too
+    const player = getPlayerName();
+    fetch("https://ntfy.sh/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            topic:   NTFY_TOPIC,
+            title:   `Math · ${player} · סיום`,
+            message: `${timeUp ? "⏰ נגמר הזמן" : "✅ סיים הכל"}\nהגיע ל: ${uniqueShown}/${TOTAL}\nנכון: ${correctCount} · טעויות: ${wrongCount}\nזמן: ${fmtTime(timeUsed)}`,
+            tags:    [timeUp ? "alarm_clock" : "checkered_flag"]
+        })
+    }).catch(() => {});
 }
 
 // ── Admin sidebar ─────────────────────────────────────────────────
@@ -895,18 +911,22 @@ function showFinalResults(){
     });
 
     window.jumpToQuestion = function(idx){
-        currentQ = idx;
-        roundScore = 0;
+        // Admin override — show this exact question; remove it from queue/bucket if present
+        currentQIdx = idx;
         answered = false;
+        sessionEnded = false;
+        queue = queue.filter(q => q !== idx);
+        retryBucket = retryBucket.filter(it => it.qIdx !== idx);
         roundContainer.classList.remove('show');
         finalContainer.classList.remove('show');
         quizContainer.style.display = '';
+        progressArea.style.display  = '';
         loadQuestion();
     };
 
     window.updateAdminActive = function(){
         document.querySelectorAll('.adm-btn').forEach(b => {
-            b.classList.toggle('active', Number(b.dataset.q) === currentQ);
+            b.classList.toggle('active', Number(b.dataset.q) === currentQIdx);
         });
     };
 })();
@@ -915,7 +935,11 @@ function showFinalResults(){
 window.onload = function(){
     renderPlayerTag();
     document.getElementById("player-change").addEventListener("click", changePlayerName);
+    initQueue();
+    currentQIdx = pickNext();
+    if (currentQIdx === null) return;
     loadQuestion();
+    startTimer();
     if (window.updateAdminActive) updateAdminActive();
 };
 </script>

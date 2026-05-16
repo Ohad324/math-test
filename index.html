@@ -261,6 +261,19 @@
         @keyframes fadeSlideIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
         .question-card, .options-grid { animation: fadeSlideIn 0.3s ease forwards; }
 
+        /* Player picker overlay */
+        #player-picker { display: none; position: fixed; inset: 0; background: rgba(15,14,23,0.92); backdrop-filter: blur(6px); z-index: 5000; align-items: center; justify-content: center; padding: 20px; }
+        #player-picker.show { display: flex; }
+        .pp-card { background: linear-gradient(140deg, #1a1a2e, #16213e); border: 1px solid rgba(167,139,250,0.35); border-radius: 22px; padding: 28px 24px; max-width: 360px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.55); animation: fadeSlideIn 0.35s ease; }
+        .pp-title { font-family: 'Fredoka One', cursive; font-size: 1.6rem; color: var(--accent); text-align: center; margin-bottom: 18px; }
+        .pp-buttons { display: flex; flex-direction: column; gap: 10px; }
+        .pp-option { background: rgba(167,139,250,0.15); border: 1.5px solid rgba(167,139,250,0.4); color: var(--text); border-radius: 14px; padding: 14px; font-size: 1.1rem; font-weight: 700; cursor: pointer; font-family: 'Rubik', sans-serif; transition: all 0.15s; }
+        .pp-option:hover, .pp-option:active { background: rgba(167,139,250,0.3); transform: scale(1.02); }
+        .pp-other { display: flex; gap: 8px; margin-top: 14px; animation: fadeSlideIn 0.25s ease; }
+        .pp-other input { flex: 1; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.18); color: var(--text); border-radius: 10px; padding: 10px 14px; font-size: 1rem; font-family: inherit; }
+        .pp-other input:focus { outline: none; border-color: var(--accent); }
+        .pp-other button { background: var(--accent2); color: var(--bg); border: none; border-radius: 10px; padding: 0 16px; font-weight: 800; cursor: pointer; font-family: inherit; }
+
         /* ===== Admin sidebar (visible only when body.admin-mode) ===== */
         #admin-sidebar { display: none; }
         body.admin-mode #admin-sidebar {
@@ -290,6 +303,22 @@
     </style>
 </head>
 <body>
+
+<!-- Player picker overlay (shown at game start) -->
+<div id="player-picker">
+    <div class="pp-card">
+        <div class="pp-title">מי משחק?</div>
+        <div class="pp-buttons">
+            <button type="button" class="pp-option" data-name="אורי">אורי</button>
+            <button type="button" class="pp-option" data-name="עומר">עומר</button>
+            <button type="button" class="pp-option" data-name="__other__">או הקלד שם…</button>
+        </div>
+        <div class="pp-other" id="pp-other-wrap" style="display:none">
+            <input type="text" id="pp-other-input" placeholder="הזן שם" maxlength="20">
+            <button type="button" id="pp-other-go">המשך</button>
+        </div>
+    </div>
+</div>
 
 <!-- Admin sidebar (hidden unless ?admin=1) -->
 <aside id="admin-sidebar" aria-hidden="true">
@@ -429,15 +458,45 @@ function renderPlayerTag(){
     }
 }
 function changePlayerName(){
-    const cur  = getPlayerName();
-    const next = (prompt("שם:", cur) || "").trim();
-    if (next) {
-        localStorage.setItem("mt_player", next);
-    } else if (next === "") {
-        // User cleared the field — remove the stored name
-        localStorage.removeItem("mt_player");
+    showPlayerPicker(() => renderPlayerTag());
+}
+// Show the picker overlay; call `onPick(name)` after the user chooses
+function showPlayerPicker(onPick){
+    const overlay = document.getElementById("player-picker");
+    const otherWrap = document.getElementById("pp-other-wrap");
+    const otherInput = document.getElementById("pp-other-input");
+    const otherGo = document.getElementById("pp-other-go");
+    otherWrap.style.display = "none";
+    otherInput.value = getPlayerName() || "";
+
+    overlay.classList.add("show");
+
+    function finish(name){
+        const clean = (name || "").trim();
+        if (clean) localStorage.setItem("mt_player", clean);
+        else localStorage.removeItem("mt_player");
+        overlay.classList.remove("show");
+        renderPlayerTag();
+        // Clean up listeners so they don't stack on next open
+        overlay.querySelectorAll(".pp-option").forEach(btn => btn.onclick = null);
+        otherGo.onclick = null;
+        otherInput.onkeydown = null;
+        if (typeof onPick === "function") onPick(clean);
     }
-    renderPlayerTag();
+
+    overlay.querySelectorAll(".pp-option").forEach(btn => {
+        btn.onclick = () => {
+            const name = btn.dataset.name;
+            if (name === "__other__") {
+                otherWrap.style.display = "flex";
+                otherInput.focus();
+            } else {
+                finish(name);
+            }
+        };
+    });
+    otherGo.onclick = () => finish(otherInput.value);
+    otherInput.onkeydown = (e) => { if (e.key === "Enter") finish(otherInput.value); };
 }
 
 // Convert math HTML (with .frac / .mixed spans) to a plain-text exercise string
@@ -1482,19 +1541,21 @@ function renderMistakesReview(){
     });
 }
 
-// Restart: reset state and start a fresh session
+// Restart: reset state and start a fresh session (after picking player)
 function restartSession(){
-    finalContainer.classList.remove("show");
-    quizContainer.style.display = "";
-    progressArea.style.display  = "";
-    sessionEnded = false;
-    answered = false;
-    timeLeft = SESSION_SEC;
-    initSession();
-    currentQIdx = pickNext();
-    if (currentQIdx === undefined || currentQIdx === null) return;
-    loadQuestion();
-    startTimer();
+    showPlayerPicker(() => {
+        finalContainer.classList.remove("show");
+        quizContainer.style.display = "";
+        progressArea.style.display  = "";
+        sessionEnded = false;
+        answered = false;
+        timeLeft = SESSION_SEC;
+        initSession();
+        currentQIdx = pickNext();
+        if (currentQIdx === undefined || currentQIdx === null) return;
+        loadQuestion();
+        startTimer();
+    });
 }
 
 // ── Celebration: emoji burst + floating points ────────────────────
@@ -1946,12 +2007,15 @@ window.onload = function(){
     document.getElementById("player-change").addEventListener("click", changePlayerName);
     document.getElementById("restart-btn").addEventListener("click", restartSession);
 
-    initSession();
-    currentQIdx = pickNext();
-    if (currentQIdx === undefined || currentQIdx === null) return;
-    loadQuestion();
-    startTimer();
-    if (window.updateAdminActive) updateAdminActive();
+    // Show player picker before starting the game
+    showPlayerPicker(() => {
+        initSession();
+        currentQIdx = pickNext();
+        if (currentQIdx === undefined || currentQIdx === null) return;
+        loadQuestion();
+        startTimer();
+        if (window.updateAdminActive) updateAdminActive();
+    });
 };
 </script>
 </body>

@@ -773,6 +773,8 @@ let correctCount      = 0;     // total correct answers (incl. repeats)
 let wrongCount        = 0;     // total wrong answers
 let highestGroupReached = 0;   // 0-based — for end-of-session reporting
 let answered          = false;
+let currentShuffledOpts    = [];  // displayed options for the current question (shuffled)
+let currentShuffledCorrect = 0;   // index of correct option AFTER shuffle
 let timeLeft          = SESSION_SEC;
 let timerHandle       = null;
 let sessionEnded      = false;
@@ -897,11 +899,17 @@ function loadQuestion(){
     topicBadge.className   = `topic-badge ${ti.badge}`;
     questionText.innerHTML = q.q();
 
+    // Shuffle option order so the correct answer isn't always in the same position
     const LETTERS = ["א","ב","ג","ד"];
-    q.options().forEach((opt, i) => {
+    const origOpts = q.options();
+    const pairs = origOpts.map((opt, idx) => ({ opt, isCorrect: idx === q.correct }));
+    shuffle(pairs);
+    currentShuffledOpts = pairs.map(p => p.opt);
+    currentShuffledCorrect = pairs.findIndex(p => p.isCorrect);
+    pairs.forEach((p, i) => {
         const btn = document.createElement("button");
         btn.className = "option-btn";
-        btn.innerHTML = `<span class="opt-letter">${LETTERS[i]}</span><span>${opt}</span>`;
+        btn.innerHTML = `<span class="opt-letter">${LETTERS[i]}</span><span>${p.opt}</span>`;
         btn.addEventListener("click", () => selectOption(i, btn));
         optionsContainer.appendChild(btn);
     });
@@ -915,7 +923,7 @@ function selectOption(selectedIdx, selectedBtn){
     answered = true;
 
     const q       = questions[currentQIdx];
-    const correct = q.correct;
+    const correct = currentShuffledCorrect;
     const allBtns = optionsContainer.querySelectorAll(".option-btn");
     const isRight = (selectedIdx === correct);
 
@@ -955,7 +963,7 @@ function selectOption(selectedIdx, selectedBtn){
     const player = getPlayerName() || "אנונימי";
     const qPlain = plainText(q.q());
     const LET    = ["א","ב","ג","ד"];
-    const opts   = q.options().map((o,i) => {
+    const opts   = currentShuffledOpts.map((o,i) => {
         const txt = plainText(o);
         const marks = (i === correct ? " ✅" : "") + (i === selectedIdx && i !== correct ? " ⬅️ בחר" : "");
         return `${LET[i]}) ${txt}${marks}`;

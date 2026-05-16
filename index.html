@@ -77,6 +77,9 @@
         #score-display { position: absolute; top: 36px; left: 0; font-family: 'Fredoka One', cursive; color: var(--accent); font-size: 1.15rem; background: rgba(249,199,79,0.12); padding: 3px 12px; border-radius: 100px; border: 1px solid rgba(249,199,79,0.3); }
         @keyframes scoreBump { 0%{transform:scale(1)} 30%{transform:scale(1.25);color:var(--accent2)} 100%{transform:scale(1);color:var(--accent)} }
         #score-display.bump { animation: scoreBump 0.5s ease; }
+        #music-toggle { position: absolute; top: 78px; left: 0; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--text); border-radius: 50%; width: 36px; height: 36px; font-size: 1.1rem; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        #music-toggle:hover { background: rgba(255,255,255,0.18); transform: scale(1.1); }
+        #music-toggle.muted { opacity: 0.45; }
 
         /* Celebration emoji burst */
         #celebrate-layer { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
@@ -308,6 +311,7 @@
         <span class="life" data-i="2">❤️</span>
     </div>
     <div id="score-display">⭐ <span id="score-value">0</span></div>
+    <button id="music-toggle" type="button" title="מוזיקת רקע">🔊</button>
 </div>
 
 <div class="progress-area" id="progress-area">
@@ -1388,16 +1392,18 @@ const questions = [
 
 // ── State ─────────────────────────────────────────────────────────
 const TOTAL          = questions.length;   // 100
-const SESSION_SEC    = 600;                // 10 minutes
+const SESSION_SEC    = 0;                  // 0 = no time limit (timer removed)
 const GROUP_SIZE     = 10;                 // 10 questions per group → 10 groups (A–J)
-const STREAK_TARGET  = 4;                  // 4 correct IN A ROW to advance group
+// How many questions to show per group before advancing: 2 for groups A–E (0..4), then 3 for F+ (5..)
+function questionsPerGroup(groupIdx){ return groupIdx < 5 ? 2 : 3; }
 const CORRECT_PAUSE  = 800;                // ms to show ✓ feedback before auto-advance
 const GROUP_NAMES    = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R"];
 
 let currentQIdx       = 0;     // question index currently shown
 let currentGroupIdx   = 0;     // 0-based group index (0=A, 9=J)
 let groupRemaining    = [];    // shuffled unshown question indices in current group
-let streak            = 0;     // consecutive correct in current group
+let groupShownCount   = 0;     // how many questions shown so far in current group
+let streak            = 0;     // consecutive correct (for stats only)
 let correctCount      = 0;     // total correct answers (incl. repeats)
 let wrongCount        = 0;     // total wrong answers
 let highestGroupReached = 0;   // 0-based — for end-of-session reporting
@@ -1406,12 +1412,14 @@ let currentShuffledOpts    = [];  // displayed options for the current question 
 let currentShuffledCorrect = 0;   // index of correct option AFTER shuffle
 const LIVES_TOTAL     = 3;
 const POINTS_PER_CORRECT = 3;
+const WIN_SCORE       = 100;               // reach this score → win!
 let lives             = LIVES_TOTAL;
 let score             = 0;
 let mistakes          = []; // [{ qIdx, qHtml, chosenHtml, correctHtml, correctText, explainHtml }]
 let timeLeft          = SESSION_SEC;
 let timerHandle       = null;
 let sessionEnded      = false;
+let sessionStartMs    = 0;     // Date.now() at session start, for elapsed-time stat
 
 // ── DOM refs ──────────────────────────────────────────────────────
 const timerDisplay   = document.getElementById("timer-display");
@@ -1442,16 +1450,8 @@ function renderTimer(){
     timerDisplay.classList.toggle("danger", timeLeft <= 30);
 }
 function startTimer(){
-    renderTimer();
-    timerHandle = setInterval(() => {
-        timeLeft--;
-        renderTimer();
-        if (timeLeft <= 0) {
-            clearInterval(timerHandle);
-            timerHandle = null;
-            endSession(true);
-        }
-    }, 1000);
+    sessionStartMs = Date.now();
+    // No time limit — don't render or tick the countdown
 }
 function stopTimer(){ if (timerHandle) { clearInterval(timerHandle); timerHandle = null; } }
 
@@ -1497,6 +1497,73 @@ function restartSession(){
     if (currentQIdx === undefined || currentQIdx === null) return;
     loadQuestion();
     startTimer();
+    if (!bgMusic.isMuted()) bgMusic.start();
+}
+
+// ── Background music (procedural chiptune loop) ───────────────────
+const bgMusic = (function(){
+    // C major-ish happy loop, ~120 bpm — short notes for a "game" feel
+    const melody = [
+        // freq Hz, duration sec
+        [523.25, 0.25], [659.25, 0.25], [783.99, 0.25], [659.25, 0.25],
+        [523.25, 0.25], [587.33, 0.25], [659.25, 0.50],
+        [440.00, 0.25], [523.25, 0.25], [587.33, 0.50],
+        [523.25, 0.25], [440.00, 0.50],
+        [523.25, 0.25], [659.25, 0.25], [783.99, 0.50],
+        [880.00, 0.25], [783.99, 0.25], [659.25, 0.50],
+        [587.33, 0.50], [523.25, 0.75]
+    ];
+    let ctx = null, master = null, started = false, timerId = null, noteIdx = 0, gainEl = null;
+    function playNote(freq, dur){
+        const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+        o1.type = "triangle"; o1.frequency.value = freq;
+        o2.type = "sine";     o2.frequency.value = freq * 2;
+        o1.connect(g); o2.connect(g); g.connect(master);
+        const t = ctx.currentTime;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(1, t + 0.015);
+        g.gain.setValueAtTime(1, t + dur * 0.7);
+        g.gain.linearRampToValueAtTime(0, t + dur);
+        o1.start(t); o2.start(t);
+        o1.stop(t + dur + 0.02); o2.stop(t + dur + 0.02);
+    }
+    function next(){
+        if (!started) return;
+        const [freq, dur] = melody[noteIdx % melody.length];
+        playNote(freq, dur);
+        noteIdx++;
+        timerId = setTimeout(next, dur * 1000);
+    }
+    return {
+        start(){
+            if (started) return;
+            try {
+                if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === "suspended") ctx.resume();
+                if (!master) { master = ctx.createGain(); master.gain.value = 0.04; master.connect(ctx.destination); }
+                started = true;
+                noteIdx = 0;
+                next();
+            } catch(e){}
+        },
+        stop(){
+            started = false;
+            if (timerId) { clearTimeout(timerId); timerId = null; }
+        },
+        stopAfter(ms){ setTimeout(() => this.stop(), ms); },
+        isMuted(){ return localStorage.getItem("mt_music") === "off"; },
+        setMuted(m){
+            if (m) { localStorage.setItem("mt_music","off"); this.stop(); }
+            else   { localStorage.removeItem("mt_music"); this.start(); }
+        }
+    };
+})();
+function updateMusicButton(){
+    const btn = document.getElementById("music-toggle");
+    if (!btn) return;
+    const muted = bgMusic.isMuted();
+    btn.textContent = muted ? "🔇" : "🔊";
+    btn.classList.toggle("muted", muted);
 }
 
 // ── Celebration: emoji burst + floating points ────────────────────
@@ -1592,6 +1659,7 @@ function reshuffleCurrentGroup(){
 function initSession(){
     currentGroupIdx = 0;
     streak = 0;
+    groupShownCount = 0;
     highestGroupReached = 0;
     lives = LIVES_TOTAL;
     score = 0;
@@ -1609,6 +1677,7 @@ function advanceGroup(){
         return false;
     }
     currentGroupIdx++;
+    groupShownCount = 0;
     streak = 0;
     highestGroupReached = Math.max(highestGroupReached, currentGroupIdx);
     reshuffleCurrentGroup();
@@ -1646,10 +1715,12 @@ function loadQuestion(){
     const q  = questions[currentQIdx];
     const ti = TOPICS[q.topic];
 
-    progressText.textContent = `קבוצה ${GROUP_NAMES[currentGroupIdx]} · רצף ${streak}/${STREAK_TARGET}`;
+    const perGroup = questionsPerGroup(currentGroupIdx);
+    progressText.textContent = `קבוצה ${GROUP_NAMES[currentGroupIdx]} · שאלה ${groupShownCount + 1}/${perGroup}`;
     scoreText.textContent    = `✓ ${correctCount}  ✗ ${wrongCount}`;
-    const pct = ((currentGroupIdx + streak / STREAK_TARGET) / GROUP_NAMES.length) * 100;
+    const pct = ((currentGroupIdx + (groupShownCount + 1) / perGroup) / GROUP_NAMES.length) * 100;
     progressBar.style.width  = `${pct}%`;
+    groupShownCount++;
 
     topicBadge.textContent = ti.label;
     topicBadge.className   = `topic-badge ${ti.badge}`;
@@ -1692,9 +1763,7 @@ function selectOption(selectedIdx, selectedBtn){
         scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
         feedbackBanner.classList.add("show","correct-fb");
         feedbackIcon.textContent = "🎉";
-        feedbackText.textContent = streak >= STREAK_TARGET
-            ? `🎯 רצף ${STREAK_TARGET}! עוברים לקבוצה הבאה! (+${POINTS_PER_CORRECT})`
-            : `${pickMessage()}  +${POINTS_PER_CORRECT} נק' (רצף ${streak}/${STREAK_TARGET})`;
+        feedbackText.textContent = `${pickMessage()}  +${POINTS_PER_CORRECT} נק'`;
         celebrate(selectedBtn);
         playCorrect();
     } else {
@@ -1767,10 +1836,12 @@ function selectOption(selectedIdx, selectedBtn){
 // ── Advance to next question (or end) ─────────────────────────────
 function advance(){
     if (sessionEnded) return;
+    // Win condition: reached score target
+    if (score >= WIN_SCORE) { endSession("win"); return; }
     // Out of lives → game over
     if (lives <= 0) { endSession("lives"); return; }
-    // If streak target reached, move to next group
-    if (streak >= STREAK_TARGET) {
+    // If we've shown enough questions in this group, advance to next group
+    if (groupShownCount >= questionsPerGroup(currentGroupIdx)) {
         const ok = advanceGroup();
         if (!ok) return; // session ended (last group done)
     }
@@ -1797,15 +1868,17 @@ function endSession(reason){
 
     const timeUp = (reason === true || reason === "time");
     const livesOut = (reason === "lives");
+    const won = (reason === "win");
     const totalAnswered = correctCount + wrongCount;
     const accuracy = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
     const groupReached = GROUP_NAMES[highestGroupReached];
-    const timeUsed = SESSION_SEC - timeLeft;
+    const timeUsed = sessionStartMs ? Math.floor((Date.now() - sessionStartMs) / 1000) : 0;
 
     let emoji, title, sub;
-    if (livesOut)  { emoji = "💔"; title = "סוף משחק"; sub = `אבדו כל ${LIVES_TOTAL} החיים`; }
-    else if (timeUp) { emoji = "⏰"; title = "נגמר הזמן!"; sub = `הגעת לקבוצה ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})`; }
-    else { emoji = "🏆"; title = "כל הכבוד! סיימת את כל הקבוצות!"; sub = `הגעת לקבוצה ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})`; }
+    if (won)        { emoji = "🏆"; title = `ניצחת! 🎉`; sub = `הגעת ל-${score} נקודות!`; }
+    else if (livesOut) { emoji = "💔"; title = "סוף משחק"; sub = `אבדו כל ${LIVES_TOTAL} החיים`; }
+    else if (timeUp)   { emoji = "⏰"; title = "נגמר הזמן!"; sub = `הגעת לקבוצה ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})`; }
+    else { emoji = "✅"; title = "סיימת את כל הקבוצות!"; sub = `הגעת לקבוצה ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})`; }
 
     document.getElementById("final-emoji").textContent = emoji;
     document.getElementById("final-title").textContent = title;
@@ -1819,7 +1892,28 @@ function endSession(reason){
     // Render mistakes review
     renderMistakesReview();
 
-    const endReason = livesOut ? "💔 סוף משחק (אבדו החיים)" : timeUp ? "⏰ נגמר הזמן" : "✅ סיימתי את כל הקבוצות";
+    const endReason = won ? "🏆 ניצחתי! (הגעתי ל-100 נק')" : livesOut ? "💔 סוף משחק (אבדו החיים)" : timeUp ? "⏰ נגמר הזמן" : "✅ סיימתי את כל הקבוצות";
+
+    // Big win celebration: blast confetti over the whole screen
+    if (won) {
+        const layer = getCelebLayer();
+        for (let i = 0; i < 60; i++) {
+            const e = document.createElement("span");
+            e.className = "celeb-emoji";
+            e.textContent = CELEBRATION_EMOJIS[Math.floor(Math.random()*CELEBRATION_EMOJIS.length)];
+            e.style.left = (Math.random()*100) + "vw";
+            e.style.top  = "-20px";
+            e.style.setProperty("--dx", ((Math.random()-0.5)*200) + "px");
+            e.style.setProperty("--dy", (window.innerHeight + 100) + "px");
+            e.style.setProperty("--rot", (Math.random()*1080 - 540) + "deg");
+            e.style.fontSize = (1.2 + Math.random()*1.6) + "rem";
+            e.style.animation = "celebFly " + (1.8 + Math.random()*1.5) + "s ease-in forwards";
+            e.style.animationDelay = (Math.random()*0.8) + "s";
+            layer.appendChild(e);
+            setTimeout(() => e.remove(), 3500);
+        }
+    }
+    if (won && bgMusic) bgMusic.stopAfter(1500); else if (bgMusic) bgMusic.stop();
 
     document.getElementById("final-whatsapp-btn").onclick = () => {
         const player = getPlayerName() || "אנונימי";
@@ -1911,6 +2005,21 @@ window.onload = function(){
     renderPlayerTag();
     document.getElementById("player-change").addEventListener("click", changePlayerName);
     document.getElementById("restart-btn").addEventListener("click", restartSession);
+    // Music toggle
+    updateMusicButton();
+    document.getElementById("music-toggle").addEventListener("click", () => {
+        bgMusic.setMuted(!bgMusic.isMuted());
+        updateMusicButton();
+    });
+    // Auto-start music on the first user interaction anywhere (browser audio policy)
+    const musicAutoStart = () => {
+        if (!bgMusic.isMuted()) bgMusic.start();
+        document.removeEventListener("click", musicAutoStart);
+        document.removeEventListener("touchstart", musicAutoStart);
+    };
+    document.addEventListener("click", musicAutoStart, { once: true });
+    document.addEventListener("touchstart", musicAutoStart, { once: true });
+
     initSession();
     currentQIdx = pickNext();
     if (currentQIdx === undefined || currentQIdx === null) return;

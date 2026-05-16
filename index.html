@@ -1390,8 +1390,8 @@ const questions = [
 const TOTAL          = questions.length;   // 100
 const SESSION_SEC    = 0;                  // 0 = no time limit (timer removed)
 const GROUP_SIZE     = 10;                 // 10 questions per group → 10 groups (A–J)
-// How many questions to show per group before advancing: 2 for groups A–E (0..4), then 3 for F+ (5..)
-function questionsPerGroup(groupIdx){ return groupIdx < 5 ? 2 : 3; }
+// How many questions to show per group before advancing: 2 for every group
+function questionsPerGroup(groupIdx){ return 2; }
 const CORRECT_PAUSE  = 800;                // ms to show ✓ feedback before auto-advance
 const GROUP_NAMES    = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R"];
 

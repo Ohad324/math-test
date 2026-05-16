@@ -77,9 +77,6 @@
         #score-display { position: absolute; top: 36px; left: 0; font-family: 'Fredoka One', cursive; color: var(--accent); font-size: 1.15rem; background: rgba(249,199,79,0.12); padding: 3px 12px; border-radius: 100px; border: 1px solid rgba(249,199,79,0.3); }
         @keyframes scoreBump { 0%{transform:scale(1)} 30%{transform:scale(1.25);color:var(--accent2)} 100%{transform:scale(1);color:var(--accent)} }
         #score-display.bump { animation: scoreBump 0.5s ease; }
-        #music-toggle { position: absolute; top: 78px; left: 0; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--text); border-radius: 50%; width: 36px; height: 36px; font-size: 1.1rem; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        #music-toggle:hover { background: rgba(255,255,255,0.18); transform: scale(1.1); }
-        #music-toggle.muted { opacity: 0.45; }
 
         /* Celebration emoji burst */
         #celebrate-layer { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
@@ -311,7 +308,6 @@
         <span class="life" data-i="2">❤️</span>
     </div>
     <div id="score-display">⭐ <span id="score-value">0</span></div>
-    <button id="music-toggle" type="button" title="מוזיקת רקע">🔊</button>
 </div>
 
 <div class="progress-area" id="progress-area">
@@ -1497,113 +1493,6 @@ function restartSession(){
     if (currentQIdx === undefined || currentQIdx === null) return;
     loadQuestion();
     startTimer();
-    if (!bgMusic.isMuted()) bgMusic.start();
-}
-
-// ── Background music — 3 melodies (slow / medium / fast) ──────────
-const bgMusic = (function(){
-    // Each melody: array of [freq Hz, duration sec]
-    const MELODIES = {
-        // SLOW — calm lullaby in F major, ~60 bpm
-        slow: [
-            [349.23, 0.80], [392.00, 0.80], [440.00, 0.60], [349.23, 1.00],
-            [440.00, 0.80], [523.25, 0.80], [440.00, 0.60], [392.00, 1.20],
-            [349.23, 0.60], [392.00, 0.60], [440.00, 1.00], [392.00, 0.80],
-            [349.23, 0.60], [330.00, 0.60], [349.23, 1.40]
-        ],
-        // MEDIUM — cheerful waltz in C major, ~110 bpm (was the previous default)
-        med: [
-            [523.25, 0.25], [659.25, 0.25], [783.99, 0.25], [659.25, 0.25],
-            [523.25, 0.25], [587.33, 0.25], [659.25, 0.50],
-            [440.00, 0.25], [523.25, 0.25], [587.33, 0.50],
-            [523.25, 0.25], [440.00, 0.50],
-            [523.25, 0.25], [659.25, 0.25], [783.99, 0.50],
-            [880.00, 0.25], [783.99, 0.25], [659.25, 0.50],
-            [587.33, 0.50], [523.25, 0.75]
-        ],
-        // FAST — energetic chiptune in E major, ~160 bpm
-        fast: [
-            [659.25, 0.12], [783.99, 0.12], [987.77, 0.12], [783.99, 0.12],
-            [659.25, 0.12], [880.00, 0.12], [783.99, 0.24],
-            [659.25, 0.12], [523.25, 0.12], [659.25, 0.12], [783.99, 0.24],
-            [880.00, 0.12], [987.77, 0.12], [1046.50, 0.18],
-            [987.77, 0.12], [783.99, 0.12], [659.25, 0.24],
-            [523.25, 0.12], [587.33, 0.12], [659.25, 0.24],
-            [523.25, 0.36]
-        ]
-    };
-    const ORDER = ["off","slow","med","fast"];
-    const ICONS = { off:"🔇", slow:"🐢", med:"🎵", fast:"🚀" };
-    let ctx = null, master = null, started = false, timerId = null, noteIdx = 0;
-    let currentMelody = MELODIES.med;
-    function playNote(freq, dur){
-        const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
-        o1.type = "triangle"; o1.frequency.value = freq;
-        o2.type = "sine";     o2.frequency.value = freq * 2;
-        o1.connect(g); o2.connect(g); g.connect(master);
-        const t = ctx.currentTime;
-        g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(1, t + 0.015);
-        g.gain.setValueAtTime(1, t + dur * 0.7);
-        g.gain.linearRampToValueAtTime(0, t + dur);
-        o1.start(t); o2.start(t);
-        o1.stop(t + dur + 0.02); o2.stop(t + dur + 0.02);
-    }
-    function next(){
-        if (!started) return;
-        const [freq, dur] = currentMelody[noteIdx % currentMelody.length];
-        playNote(freq, dur);
-        noteIdx++;
-        timerId = setTimeout(next, dur * 1000);
-    }
-    function ensureCtx(){
-        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-        if (ctx.state === "suspended") ctx.resume();
-        if (!master) { master = ctx.createGain(); master.gain.value = 0.04; master.connect(ctx.destination); }
-    }
-    return {
-        // Read user's chosen tempo (default = medium)
-        getMode(){ return localStorage.getItem("mt_music") || "med"; },
-        // Cycle: off → slow → med → fast → off
-        cycle(){
-            const cur = this.getMode();
-            const i = ORDER.indexOf(cur);
-            const nextMode = ORDER[(i + 1) % ORDER.length];
-            localStorage.setItem("mt_music", nextMode);
-            this.apply();
-            return nextMode;
-        },
-        // Apply the stored mode (start/stop + swap melody)
-        apply(){
-            const mode = this.getMode();
-            this.stop();
-            if (mode === "off") return;
-            currentMelody = MELODIES[mode] || MELODIES.med;
-            try {
-                ensureCtx();
-                started = true;
-                noteIdx = 0;
-                next();
-            } catch(e){}
-        },
-        start(){ if (this.getMode() !== "off") this.apply(); },
-        stop(){
-            started = false;
-            if (timerId) { clearTimeout(timerId); timerId = null; }
-        },
-        stopAfter(ms){ setTimeout(() => this.stop(), ms); },
-        isMuted(){ return this.getMode() === "off"; },
-        setMuted(m){ if (m) { localStorage.setItem("mt_music","off"); this.stop(); } else { localStorage.removeItem("mt_music"); this.apply(); } },
-        currentIcon(){ return ICONS[this.getMode()]; }
-    };
-})();
-function updateMusicButton(){
-    const btn = document.getElementById("music-toggle");
-    if (!btn) return;
-    btn.textContent = bgMusic.currentIcon();
-    btn.classList.toggle("muted", bgMusic.isMuted());
-    const labels = { off:"מוזיקה כבויה — לחץ לאיטית", slow:"איטי — לחץ לבינוני", med:"בינוני — לחץ למהיר", fast:"מהיר — לחץ לכיבוי" };
-    btn.title = labels[bgMusic.getMode()] || "מוזיקת רקע";
 }
 
 // ── Celebration: emoji burst + floating points ────────────────────
@@ -1957,8 +1846,6 @@ function endSession(reason){
             setTimeout(() => e.remove(), 3500);
         }
     }
-    if (won && bgMusic) bgMusic.stopAfter(1500); else if (bgMusic) bgMusic.stop();
-
     document.getElementById("final-whatsapp-btn").onclick = () => {
         const player = getPlayerName() || "אנונימי";
         const msg = encodeURIComponent(
@@ -2049,20 +1936,6 @@ window.onload = function(){
     renderPlayerTag();
     document.getElementById("player-change").addEventListener("click", changePlayerName);
     document.getElementById("restart-btn").addEventListener("click", restartSession);
-    // Music toggle — cycle off → slow → med → fast → off
-    updateMusicButton();
-    document.getElementById("music-toggle").addEventListener("click", () => {
-        bgMusic.cycle();
-        updateMusicButton();
-    });
-    // Auto-start music on the first user interaction anywhere (browser audio policy)
-    const musicAutoStart = () => {
-        if (!bgMusic.isMuted()) bgMusic.start();
-        document.removeEventListener("click", musicAutoStart);
-        document.removeEventListener("touchstart", musicAutoStart);
-    };
-    document.addEventListener("click", musicAutoStart, { once: true });
-    document.addEventListener("touchstart", musicAutoStart, { once: true });
 
     initSession();
     currentQIdx = pickNext();

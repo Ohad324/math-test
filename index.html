@@ -68,6 +68,15 @@
         .timer-display.warn { color: var(--accent); }
         .timer-display.danger { color: var(--accent3); animation: pulse 1s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+        .header { position: relative; }
+        #lives-display { position: absolute; top: 0; left: 0; display: flex; gap: 6px; font-size: 1.5rem; line-height: 1; }
+        .life { transition: all 0.4s ease; display: inline-block; position: relative; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+        .life.lost { filter: grayscale(1); opacity: 0.35; transform: scale(0.85); }
+        .life.lost::after { content: "✖"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--accent3); font-weight: 900; font-size: 1.4rem; text-shadow: 0 0 4px #000; }
+        #score-display { position: absolute; top: 36px; left: 0; font-family: 'Fredoka One', cursive; color: var(--accent); font-size: 1.15rem; background: rgba(249,199,79,0.12); padding: 3px 12px; border-radius: 100px; border: 1px solid rgba(249,199,79,0.3); }
+        @keyframes scoreBump { 0%{transform:scale(1)} 30%{transform:scale(1.25);color:var(--accent2)} 100%{transform:scale(1);color:var(--accent)} }
+        #score-display.bump { animation: scoreBump 0.5s ease; }
         .player-tag { font-size: 0.8rem; color: var(--muted); margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; }
         .player-tag #player-name { color: var(--accent); font-weight: 700; }
         .player-tag button { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--text); border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; cursor: pointer; font-family: inherit; }
@@ -243,6 +252,12 @@
     <div class="header-title">🔢 חשבון כיתה ה'</div>
     <div class="timer-display" id="timer-display" style="display:none">⏱ 10:00</div>
     <div class="player-tag" id="player-tag">שחקן: <span id="player-name">…</span> <button id="player-change" type="button">שנה</button></div>
+    <div id="lives-display">
+        <span class="life" data-i="0">❤️</span>
+        <span class="life" data-i="1">❤️</span>
+        <span class="life" data-i="2">❤️</span>
+    </div>
+    <div id="score-display">⭐ <span id="score-value">0</span></div>
 </div>
 
 <div class="progress-area" id="progress-area">
@@ -1337,6 +1352,10 @@ let highestGroupReached = 0;   // 0-based — for end-of-session reporting
 let answered          = false;
 let currentShuffledOpts    = [];  // displayed options for the current question (shuffled)
 let currentShuffledCorrect = 0;   // index of correct option AFTER shuffle
+const LIVES_TOTAL     = 3;
+const POINTS_PER_CORRECT = 3;
+let lives             = LIVES_TOTAL;
+let score             = 0;
 let timeLeft          = SESSION_SEC;
 let timerHandle       = null;
 let sessionEnded      = false;
@@ -1383,6 +1402,24 @@ function startTimer(){
 }
 function stopTimer(){ if (timerHandle) { clearInterval(timerHandle); timerHandle = null; } }
 
+// ── Lives & score UI ──────────────────────────────────────────────
+function renderLives(){
+    document.querySelectorAll(".life").forEach((el, i) => {
+        el.classList.toggle("lost", i >= lives);
+    });
+}
+function renderScore(bump){
+    const el = document.getElementById("score-value");
+    if (!el) return;
+    el.textContent = score;
+    if (bump) {
+        const wrap = document.getElementById("score-display");
+        wrap.classList.remove("bump");
+        void wrap.offsetWidth;
+        wrap.classList.add("bump");
+    }
+}
+
 // ── Group + queue management ──────────────────────────────────────
 function shuffle(arr){
     for (let i = arr.length - 1; i > 0; i--) {
@@ -1406,6 +1443,10 @@ function initSession(){
     currentGroupIdx = 0;
     streak = 0;
     highestGroupReached = 0;
+    lives = LIVES_TOTAL;
+    score = 0;
+    renderLives();
+    renderScore(false);
     reshuffleCurrentGroup();
 }
 function advanceGroup(){
@@ -1493,20 +1534,27 @@ function selectOption(selectedIdx, selectedBtn){
         selectedBtn.classList.add("correct");
         correctCount++;
         streak++;
+        score += POINTS_PER_CORRECT;
+        renderScore(true);
         scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
         feedbackBanner.classList.add("show","correct-fb");
         feedbackIcon.textContent = "✅";
         feedbackText.textContent = streak >= STREAK_TARGET
-            ? `🎯 רצף ${STREAK_TARGET}! עוברים לקבוצה הבאה!`
-            : `כל הכבוד! רצף ${streak}/${STREAK_TARGET} 🎉`;
+            ? `🎯 רצף ${STREAK_TARGET}! עוברים לקבוצה הבאה! (+${POINTS_PER_CORRECT})`
+            : `כל הכבוד! +${POINTS_PER_CORRECT} נקודות (רצף ${streak}/${STREAK_TARGET}) 🎉`;
         playCorrect();
     } else {
         wrongCount++;
         streak = 0;
+        lives--;
+        renderLives();
         selectedBtn.classList.add("wrong");
         feedbackBanner.classList.add("show","wrong-fb");
         feedbackIcon.textContent = "❌";
-        feedbackText.textContent = "לא נכון. הרצף התאפס — נשארים בקבוצה 💪";
+        const livesLeft = Math.max(lives, 0);
+        feedbackText.textContent = livesLeft > 0
+            ? `לא נכון. נשארו לך ${livesLeft} ${livesLeft === 1 ? "חיים" : "חיים"} ❤️`
+            : `אבדו כל החיים — סוף משחק 💔`;
         playWrong();
         scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
         // Show step-by-step explanation if this question has one
@@ -1555,6 +1603,8 @@ function selectOption(selectedIdx, selectedBtn){
 // ── Advance to next question (or end) ─────────────────────────────
 function advance(){
     if (sessionEnded) return;
+    // Out of lives → game over
+    if (lives <= 0) { endSession("lives"); return; }
     // If streak target reached, move to next group
     if (streak >= STREAK_TARGET) {
         const ok = advanceGroup();
@@ -1570,7 +1620,8 @@ function advance(){
 nextBtn.addEventListener("click", advance);
 
 // ── End session ───────────────────────────────────────────────────
-function endSession(timeUp){
+// reason: false = completed all, true / "time" = time up, "lives" = no lives left
+function endSession(reason){
     if (sessionEnded) return;
     sessionEnded = true;
     stopTimer();
@@ -1580,26 +1631,35 @@ function endSession(timeUp){
     roundContainer.classList.remove("show");
     finalContainer.classList.add("show");
 
+    const timeUp = (reason === true || reason === "time");
+    const livesOut = (reason === "lives");
     const totalAnswered = correctCount + wrongCount;
     const accuracy = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
     const groupReached = GROUP_NAMES[highestGroupReached];
     const timeUsed = SESSION_SEC - timeLeft;
 
-    document.getElementById("final-emoji").textContent = timeUp ? "⏰" : "🏆";
-    document.getElementById("final-title").textContent = timeUp ? "נגמר הזמן!" : "כל הכבוד! סיימת את כל הקבוצות!";
-    document.getElementById("final-sub").textContent   = `הגעת לקבוצה ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})`;
-    document.getElementById("final-total-score").textContent = `קבוצה ${groupReached}`;
-    document.getElementById("final-total-pct").textContent   = `דיוק · ${accuracy}%`;
+    let emoji, title, sub;
+    if (livesOut)  { emoji = "💔"; title = "סוף משחק"; sub = `אבדו כל ${LIVES_TOTAL} החיים`; }
+    else if (timeUp) { emoji = "⏰"; title = "נגמר הזמן!"; sub = `הגעת לקבוצה ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})`; }
+    else { emoji = "🏆"; title = "כל הכבוד! סיימת את כל הקבוצות!"; sub = `הגעת לקבוצה ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})`; }
+
+    document.getElementById("final-emoji").textContent = emoji;
+    document.getElementById("final-title").textContent = title;
+    document.getElementById("final-sub").textContent   = sub;
+    document.getElementById("final-total-score").textContent = `${score} נק'`;
+    document.getElementById("final-total-pct").textContent   = `קבוצה ${groupReached} · דיוק ${accuracy}%`;
     document.getElementById("final-correct").textContent = correctCount;
     document.getElementById("final-wrong").textContent   = wrongCount;
     document.getElementById("final-time").textContent    = fmtTime(timeUsed);
+
+    const endReason = livesOut ? "💔 סוף משחק (אבדו החיים)" : timeUp ? "⏰ נגמר הזמן" : "✅ סיימתי את כל הקבוצות";
 
     document.getElementById("final-whatsapp-btn").onclick = () => {
         const player = getPlayerName() || "אנונימי";
         const msg = encodeURIComponent(
             `היי אבא! 👋\nסיימתי תרגול חשבון 📐\n\n` +
-            `שחקן: ${player}\n` +
-            `${timeUp ? "⏰ נגמר הזמן" : "✅ סיימתי את כל הקבוצות"}\n\n` +
+            `שחקן: ${player}\n${endReason}\n\n` +
+            `*ניקוד: ${score} נק'* ⭐\n` +
             `קבוצה שהגעתי אליה: *${groupReached}* (${highestGroupReached+1}/${GROUP_NAMES.length})\n` +
             `נכון: *${correctCount}* ✅\n` +
             `טעויות: *${wrongCount}* ❌\n` +
@@ -1617,8 +1677,8 @@ function endSession(timeUp){
         body: JSON.stringify({
             topic:   NTFY_TOPIC,
             title:   `Math · ${player} · סיום`,
-            message: `${timeUp ? "⏰ נגמר הזמן" : "✅ סיים את כל הקבוצות"}\nקבוצה: ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})\nנכון: ${correctCount} · טעויות: ${wrongCount} · דיוק: ${accuracy}%\nזמן: ${fmtTime(timeUsed)}`,
-            tags:    [timeUp ? "alarm_clock" : "checkered_flag"]
+            message: `${endReason}\n⭐ ניקוד: ${score} נק'\nקבוצה: ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})\nנכון: ${correctCount} · טעויות: ${wrongCount} · דיוק: ${accuracy}%\nזמן: ${fmtTime(timeUsed)}`,
+            tags:    [livesOut ? "broken_heart" : timeUp ? "alarm_clock" : "checkered_flag"]
         })
     }).catch(() => {});
 }

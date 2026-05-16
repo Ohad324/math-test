@@ -125,6 +125,8 @@
             transition: all 0.18s ease; display: flex; align-items: center; gap: 11px; line-height: 2;
         }
         .option-btn:hover:not(:disabled) { background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.4); transform: translateX(-3px); }
+        .option-btn:focus { outline: none; }
+        .option-btn:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
         .option-btn .opt-letter { min-width: 28px; height: 28px; border-radius: 7px; background: rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 800; color: var(--muted); flex-shrink: 0; }
         .option-btn.correct { background: rgba(144,190,109,0.15); border-color: var(--accent2); animation: pulse-green 0.4s ease; }
         .option-btn.correct .opt-letter { background: var(--accent2); color: var(--bg); }
@@ -723,6 +725,8 @@ function pickNext(){
 function loadQuestion(){
     if (sessionEnded) return;
     answered = false;
+    // Drop focus from any previous button so no stale focus ring lingers on a new option
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     nextBtn.classList.remove("show");
     feedbackBanner.classList.remove("show","correct-fb","wrong-fb");
     optionsContainer.innerHTML = "";

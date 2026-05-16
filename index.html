@@ -707,6 +707,89 @@ function wordSubExplain(n1,d1,n2,d2){
     return subDiffDenomExplain(n1,d1,n2,d2);
 }
 
+// ── Decimal explanations ──────────────────────────────────────────
+function placeValueExplain(dec, placeName, digit){
+    const txt = String(dec);
+    return mkExplain("ערך מקום בעשרוני",
+        step(`בכל מספר עשרוני, הספרות אחרי הנקודה הן: <b>עשיריות</b> (1/10), <b>מאיות</b> (1/100), <b>אלפיות</b> (1/1000)…`) +
+        eqLine(`${txt} → ספרת ה${placeName} = <span class="exp-answer">${digit}</span>`)
+    );
+}
+function writeDecimalExplain(words, decStr){
+    return mkExplain("כתיבת עשרוני",
+        step(`${words} = <span class="exp-answer">${decStr}</span>`) +
+        step(`כל ספרה אחרי הנקודה היא חלק חלקי 10, 100, 1000…`)
+    );
+}
+function compareDecimalsExplain(a, b){
+    const aN = parseFloat(a), bN = parseFloat(b);
+    const bigger = aN >= bN ? a : b;
+    return mkExplain("השוואת עשרוניים",
+        step(`כדי להשוות עשרוניים, משווים ספרה-ספרה אחרי הנקודה (משמאל לימין).`) +
+        step(`טיפ: אפשר להוסיף אפסים בסוף בלי לשנות ערך → ${a} ו-${b}`) +
+        eqLine(`<span class="exp-answer">${aN === bN ? `${a} = ${b}` : `${bigger} גדול יותר`}</span>`)
+    );
+}
+function addDecimalsExplain(a, b){
+    const sum = +(parseFloat(a) + parseFloat(b)).toFixed(10);
+    return mkExplain("חיבור עשרוניים",
+        step(`מסדרים את המספרים אחד מתחת לשני כך שהנקודה העשרונית מתחת לנקודה.`) +
+        step(`מחברים כמו במספרים שלמים, ומעתיקים את הנקודה.`) +
+        eqLine(`${a} + ${b} = <span class="exp-answer">${sum}</span>`)
+    );
+}
+function subDecimalsExplain(a, b){
+    const diff = +(parseFloat(a) - parseFloat(b)).toFixed(10);
+    return mkExplain("חיסור עשרוניים",
+        step(`מסדרים את המספרים אחד מתחת לשני כך שהנקודה תחת הנקודה.`) +
+        step(`מחסרים כמו במספרים שלמים, ומעתיקים את הנקודה.`) +
+        eqLine(`${a} − ${b} = <span class="exp-answer">${diff}</span>`)
+    );
+}
+function multByPow10Explain(num, pow){
+    // pow = 10, 100, 1000…
+    const places = Math.log10(pow);
+    const ans = +(parseFloat(num) * pow).toFixed(10);
+    return mkExplain(`כפל ב-${pow}`,
+        step(`כפל ב-${pow} = הזזת הנקודה <b>${places}</b> מקומות ימינה.`) +
+        eqLine(`${num} × ${pow} = <span class="exp-answer">${ans}</span>`)
+    );
+}
+function divByPow10Explain(num, pow){
+    const places = Math.log10(pow);
+    const ans = +(parseFloat(num) / pow).toFixed(10);
+    return mkExplain(`חילוק ב-${pow}`,
+        step(`חילוק ב-${pow} = הזזת הנקודה <b>${places}</b> מקומות שמאלה.`) +
+        eqLine(`${num} ÷ ${pow} = <span class="exp-answer">${ans}</span>`)
+    );
+}
+function roundDecimalExplain(num, placeName){
+    // place: "tenth" (עשירית) → look at hundredths digit
+    const n = parseFloat(num);
+    let ans, rule;
+    if (placeName === "עשירית") {
+        ans = Math.round(n * 10) / 10;
+        rule = `מסתכלים על ספרת המאיות. אם 5 או יותר — מעגלים מעלה, אחרת מטה.`;
+    } else { // ones
+        ans = Math.round(n);
+        rule = `מסתכלים על ספרת העשיריות. אם 5 או יותר — מעגלים מעלה.`;
+    }
+    return mkExplain(`עיגול ל${placeName}`,
+        step(rule) +
+        eqLine(`${num} ≈ <span class="exp-answer">${ans}</span>`)
+    );
+}
+function fracVsDecimalExplain(fracN, fracD, decStr){
+    const fVal = fracN / fracD;
+    const dVal = parseFloat(decStr);
+    const winner = fVal === dVal ? "שווים" : (fVal > dVal ? `${fracN}/${fracD} גדול` : `${decStr} גדול`);
+    return mkExplain("השוואת שבר ועשרוני",
+        step(`ממירים את השבר לעשרוני: ${frac(fracN,fracD)} = ${fVal}`) +
+        eqLine(`${frac(fracN,fracD)} ${fVal === dVal ? "=" : (fVal > dVal ? ">" : "<")} ${decStr}`) +
+        step(`<span class="exp-answer">${winner}</span>`)
+    );
+}
+
 // LCD step-by-step explanation: list multiples of each number until the first common multiple
 function lcdExplain(...nums){
     const result = lcmAll(nums);
@@ -1009,6 +1092,126 @@ const questions = [
 // Q100
 { topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(3,7,10)} + ${m(2,4,15)} =</span>`, options:()=>[ m(6,1,30), m(5,11,15), m(6,1,6), m(5,29,30) ], correct:3, correctText:"5 ו-29/30", explain:()=>addMixedExplain(3,7,10,2,4,15) },
 
+// ══════════════════════════════════════════════════════════════════
+// GROUP K (Q101-110): Decimals — reading & place value
+// ══════════════════════════════════════════════════════════════════
+// Q101
+{ topic:"decimals", q:()=>`בעשרוני 0.5 — ספרת העשיריות היא:`, options:()=>["0","1","5","50"], correct:2, correctText:"5", explain:()=>placeValueExplain("0.5","עשיריות","5") },
+// Q102
+{ topic:"decimals", q:()=>`בעשרוני 0.7 — ספרת העשיריות היא:`, options:()=>["7","0","1","70"], correct:0, correctText:"7", explain:()=>placeValueExplain("0.7","עשיריות","7") },
+// Q103
+{ topic:"decimals", q:()=>`בעשרוני 0.34 — ספרת המאיות היא:`, options:()=>["3","4","34","0"], correct:1, correctText:"4", explain:()=>placeValueExplain("0.34","מאיות","4") },
+// Q104
+{ topic:"decimals", q:()=>`בעשרוני 0.06 — ספרת המאיות היא:`, options:()=>["0","6","60","1"], correct:1, correctText:"6", explain:()=>placeValueExplain("0.06","מאיות","6") },
+// Q105
+{ topic:"decimals", q:()=>`כתוב כעשרוני: 3 עשיריות`, options:()=>["3.0","0.3","0.03","30"], correct:1, correctText:"0.3", explain:()=>writeDecimalExplain("3 עשיריות","0.3") },
+// Q106
+{ topic:"decimals", q:()=>`כתוב כעשרוני: 25 מאיות`, options:()=>["0.25","2.5","0.025","25.0"], correct:0, correctText:"0.25", explain:()=>writeDecimalExplain("25 מאיות = 25/100","0.25") },
+// Q107
+{ topic:"decimals", q:()=>`כתוב כעשרוני: 7 מאיות`, options:()=>["0.7","7.0","0.07","0.007"], correct:2, correctText:"0.07", explain:()=>writeDecimalExplain("7 מאיות = 7/100","0.07") },
+// Q108
+{ topic:"decimals", q:()=>`כמה עשיריות יש ב-0.4?`, options:()=>["1","4","10","40"], correct:1, correctText:"4", explain:()=>placeValueExplain("0.4","עשיריות","4") },
+// Q109
+{ topic:"decimals", q:()=>`איזה זוג שווה? 0.5 ו...`, options:()=>["0.05","0.50","5.0","0.005"], correct:1, correctText:"0.50", explain:()=>compareDecimalsExplain("0.5","0.50") },
+// Q110
+{ topic:"decimals", q:()=>`כתוב כעשרוני: 4 אלפיות`, options:()=>["0.4","0.04","0.004","4.0"], correct:2, correctText:"0.004", explain:()=>writeDecimalExplain("4 אלפיות = 4/1000","0.004") },
+
+// ══════════════════════════════════════════════════════════════════
+// GROUP L (Q111-120): Decimals — comparison
+// ══════════════════════════════════════════════════════════════════
+// Q111
+{ topic:"decimals", q:()=>`מה גדול: 0.5 או 0.05?`, options:()=>["0.5","0.05","שווים","אי-אפשר להשוות"], correct:0, correctText:"0.5", explain:()=>compareDecimalsExplain("0.5","0.05") },
+// Q112
+{ topic:"decimals", q:()=>`מה גדול: 0.7 או 0.07?`, options:()=>["0.07","0.7","שווים","תלוי"], correct:1, correctText:"0.7", explain:()=>compareDecimalsExplain("0.7","0.07") },
+// Q113
+{ topic:"decimals", q:()=>`מה גדול: 0.3 או 0.25?`, options:()=>["0.25","0.3","שווים","תלוי"], correct:1, correctText:"0.3", explain:()=>compareDecimalsExplain("0.3","0.25") },
+// Q114
+{ topic:"decimals", q:()=>`איך קשורים 0.4 ו-0.40?`, options:()=>["0.4 גדול","0.40 גדול","שווים","אחר"], correct:2, correctText:"שווים", explain:()=>compareDecimalsExplain("0.4","0.40") },
+// Q115
+{ topic:"decimals", q:()=>`מה גדול: 0.6 או 0.59?`, options:()=>["0.59","0.6","שווים","תלוי"], correct:1, correctText:"0.6", explain:()=>compareDecimalsExplain("0.6","0.59") },
+// Q116
+{ topic:"decimals", q:()=>`איזה מספר הוא הקטן ביותר?`, options:()=>["0.1","0.01","0.11","0.001"], correct:3, correctText:"0.001", explain:()=>compareDecimalsExplain("0.001","0.01") },
+// Q117
+{ topic:"decimals", q:()=>`האם 0.5 = ${f(1,2)}?`, options:()=>["כן, שווים","0.5 גדול","½ גדול","תלוי"], correct:0, correctText:"כן, שווים", explain:()=>fracVsDecimalExplain(1,2,"0.5") },
+// Q118
+{ topic:"decimals", q:()=>`מה גדול: 0.25 או ${f(1,3)}?`, options:()=>["0.25","⅓","שווים","תלוי"], correct:1, correctText:"⅓ ≈ 0.333", explain:()=>fracVsDecimalExplain(1,3,"0.25") },
+// Q119
+{ topic:"decimals", q:()=>`האם 0.75 = ${f(3,4)}?`, options:()=>["כן","0.75 גדול","¾ גדול","לא"], correct:0, correctText:"כן", explain:()=>fracVsDecimalExplain(3,4,"0.75") },
+// Q120
+{ topic:"decimals", q:()=>`מה הקרוב יותר ל-1: 0.9 או 0.99?`, options:()=>["0.9","0.99","שווה הרחוק","לא ידוע"], correct:1, correctText:"0.99", explain:()=>compareDecimalsExplain("0.99","0.9") },
+
+// ══════════════════════════════════════════════════════════════════
+// GROUP M (Q121-130): Decimals — addition
+// ══════════════════════════════════════════════════════════════════
+// Q121
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.3 + 0.4 =</span>`, options:()=>["0.7","0.07","7","0.34"], correct:0, correctText:"0.7", explain:()=>addDecimalsExplain("0.3","0.4") },
+// Q122
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.5 + 0.5 =</span>`, options:()=>["0.10","1.0","0.55","1.5"], correct:1, correctText:"1.0", explain:()=>addDecimalsExplain("0.5","0.5") },
+// Q123
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.7 + 0.2 =</span>`, options:()=>["0.9","0.09","0.72","9"], correct:0, correctText:"0.9", explain:()=>addDecimalsExplain("0.7","0.2") },
+// Q124
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.25 + 0.25 =</span>`, options:()=>["0.5","0.2525","0.05","0.4"], correct:0, correctText:"0.5", explain:()=>addDecimalsExplain("0.25","0.25") },
+// Q125
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.6 + 0.4 =</span>`, options:()=>["0.10","1.0","1.10","0.64"], correct:1, correctText:"1.0", explain:()=>addDecimalsExplain("0.6","0.4") },
+// Q126
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1.5 + 0.5 =</span>`, options:()=>["1.55","2.0","2.5","1.10"], correct:1, correctText:"2.0", explain:()=>addDecimalsExplain("1.5","0.5") },
+// Q127
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.15 + 0.05 =</span>`, options:()=>["0.2","0.20","0.1505","0.10"], correct:0, correctText:"0.2", explain:()=>addDecimalsExplain("0.15","0.05") },
+// Q128
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.8 + 0.7 =</span>`, options:()=>["1.5","0.15","0.87","1.05"], correct:0, correctText:"1.5", explain:()=>addDecimalsExplain("0.8","0.7") },
+// Q129
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.3 + 0.45 =</span>`, options:()=>["0.75","0.48","0.345","0.48"], correct:0, correctText:"0.75", explain:()=>addDecimalsExplain("0.3","0.45") },
+// Q130
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 2.5 + 1.5 =</span>`, options:()=>["3.5","4.0","4.10","3.10"], correct:1, correctText:"4.0", explain:()=>addDecimalsExplain("2.5","1.5") },
+
+// ══════════════════════════════════════════════════════════════════
+// GROUP N (Q131-140): Decimals — subtraction
+// ══════════════════════════════════════════════════════════════════
+// Q131
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.8 − 0.3 =</span>`, options:()=>["0.5","0.05","5","0.6"], correct:0, correctText:"0.5", explain:()=>subDecimalsExplain("0.8","0.3") },
+// Q132
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − 0.5 =</span>`, options:()=>["0.5","0.05","1.5","0.95"], correct:0, correctText:"0.5", explain:()=>subDecimalsExplain("1","0.5") },
+// Q133
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − 0.25 =</span>`, options:()=>["0.75","0.025","1.25","0.85"], correct:0, correctText:"0.75", explain:()=>subDecimalsExplain("1","0.25") },
+// Q134
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.7 − 0.4 =</span>`, options:()=>["0.3","0.03","3","0.11"], correct:0, correctText:"0.3", explain:()=>subDecimalsExplain("0.7","0.4") },
+// Q135
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.9 − 0.45 =</span>`, options:()=>["0.45","0.5","0.045","0.55"], correct:0, correctText:"0.45", explain:()=>subDecimalsExplain("0.9","0.45") },
+// Q136
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1.5 − 0.5 =</span>`, options:()=>["1","2","1.10","0.10"], correct:0, correctText:"1", explain:()=>subDecimalsExplain("1.5","0.5") },
+// Q137
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 2 − 0.3 =</span>`, options:()=>["1.7","2.3","1.97","0.7"], correct:0, correctText:"1.7", explain:()=>subDecimalsExplain("2","0.3") },
+// Q138
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.5 − 0.25 =</span>`, options:()=>["0.25","0.3","0.025","0.225"], correct:0, correctText:"0.25", explain:()=>subDecimalsExplain("0.5","0.25") },
+// Q139
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − 0.99 =</span>`, options:()=>["0.01","0.1","0.99","0.001"], correct:0, correctText:"0.01", explain:()=>subDecimalsExplain("1","0.99") },
+// Q140
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 3.5 − 1.2 =</span>`, options:()=>["2.3","4.7","2.7","1.3"], correct:0, correctText:"2.3", explain:()=>subDecimalsExplain("3.5","1.2") },
+
+// ══════════════════════════════════════════════════════════════════
+// GROUP O (Q141-150): Decimals — multiply/divide by 10/100/1000 + round
+// ══════════════════════════════════════════════════════════════════
+// Q141
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.5 × 10 =</span>`, options:()=>["5","50","0.05","0.5"], correct:0, correctText:"5", explain:()=>multByPow10Explain("0.5",10) },
+// Q142
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.05 × 10 =</span>`, options:()=>["0.5","5","0.005","50"], correct:0, correctText:"0.5", explain:()=>multByPow10Explain("0.05",10) },
+// Q143
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.3 × 100 =</span>`, options:()=>["30","3","300","0.003"], correct:0, correctText:"30", explain:()=>multByPow10Explain("0.3",100) },
+// Q144
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 5 ÷ 10 =</span>`, options:()=>["0.5","50","0.05","5"], correct:0, correctText:"0.5", explain:()=>divByPow10Explain("5",10) },
+// Q145
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 25 ÷ 100 =</span>`, options:()=>["0.25","2.5","0.025","250"], correct:0, correctText:"0.25", explain:()=>divByPow10Explain("25",100) },
+// Q146
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.7 × 10 =</span>`, options:()=>["7","70","0.07","0.7"], correct:0, correctText:"7", explain:()=>multByPow10Explain("0.7",10) },
+// Q147
+{ topic:"decimals", q:()=>`עגל לעשירית הקרובה: 0.46`, options:()=>["0.5","0.4","0.46","1"], correct:0, correctText:"0.5", explain:()=>roundDecimalExplain("0.46","עשירית") },
+// Q148
+{ topic:"decimals", q:()=>`עגל לעשירית הקרובה: 0.34`, options:()=>["0.3","0.4","0.34","0"], correct:0, correctText:"0.3", explain:()=>roundDecimalExplain("0.34","עשירית") },
+// Q149
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.123 × 100 =</span>`, options:()=>["12.3","1.23","123","0.0123"], correct:0, correctText:"12.3", explain:()=>multByPow10Explain("0.123",100) },
+// Q150
+{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 250 ÷ 100 =</span>`, options:()=>["2.5","25","0.25","250"], correct:0, correctText:"2.5", explain:()=>divByPow10Explain("250",100) },
+
 ]; // end questions
 
 // ── State ─────────────────────────────────────────────────────────
@@ -1017,7 +1220,7 @@ const SESSION_SEC    = 600;                // 10 minutes
 const GROUP_SIZE     = 10;                 // 10 questions per group → 10 groups (A–J)
 const STREAK_TARGET  = 4;                  // 4 correct IN A ROW to advance group
 const CORRECT_PAUSE  = 800;                // ms to show ✓ feedback before auto-advance
-const GROUP_NAMES    = ["A","B","C","D","E","F","G","H","I","J"];
+const GROUP_NAMES    = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O"];
 
 let currentQIdx       = 0;     // question index currently shown
 let currentGroupIdx   = 0;     // 0-based group index (0=A, 9=J)
@@ -1323,7 +1526,7 @@ function endSession(timeUp){
     if (localStorage.getItem('mt_admin') !== '1') return;
 
     document.body.classList.add('admin-mode');
-    const SECTIONS = ['A','B','C','D','E','F','G','H','I','J'];
+    const SECTIONS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O'];
     const host = document.getElementById('adm-sections');
     SECTIONS.forEach((name, sIdx) => {
         const sec = document.createElement('div');

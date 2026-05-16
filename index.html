@@ -1390,8 +1390,10 @@ const questions = [
 const TOTAL          = questions.length;   // 100
 const SESSION_SEC    = 0;                  // 0 = no time limit (timer removed)
 const GROUP_SIZE     = 10;                 // 10 questions per group → 10 groups (A–J)
-// How many questions to show per group before advancing: 2 for every group
-function questionsPerGroup(groupIdx){ return 2; }
+// Distribute 33 questions across 18 groups so the child sees ALL groups
+// before reaching the 99-point win threshold (33 × 3 pts each).
+// 3 groups get 1 question (A, G, M — every 6th), 15 groups get 2 → total 33.
+function questionsPerGroup(groupIdx){ return (groupIdx % 6 === 0) ? 1 : 2; }
 const CORRECT_PAUSE  = 800;                // ms to show ✓ feedback before auto-advance
 const GROUP_NAMES    = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R"];
 
@@ -1408,7 +1410,7 @@ let currentShuffledOpts    = [];  // displayed options for the current question 
 let currentShuffledCorrect = 0;   // index of correct option AFTER shuffle
 const LIVES_TOTAL     = 3;
 const POINTS_PER_CORRECT = 3;
-const WIN_SCORE       = 100;               // reach this score → win!
+const WIN_SCORE       = 99;                // 33 correct × 3 pts = 99 → reach to win
 let lives             = LIVES_TOTAL;
 let score             = 0;
 let mistakes          = []; // [{ qIdx, qHtml, chosenHtml, correctHtml, correctText, explainHtml }]

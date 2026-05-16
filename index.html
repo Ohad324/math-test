@@ -1802,9 +1802,12 @@ function selectOption(selectedIdx, selectedBtn){
         renderScore(true);
         scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
         feedbackBanner.classList.add("show","correct-fb");
-        feedbackIcon.textContent = "🎉";
-        feedbackText.textContent = `${pickMessage()}  +${POINTS_PER_CORRECT} נק'`;
-        celebrate(selectedBtn);
+        const bigCelebration = (correctCount % 3 === 0);
+        feedbackIcon.textContent = bigCelebration ? "🎊" : "✅";
+        feedbackText.textContent = bigCelebration
+            ? `🎉 ${pickMessage()} +${POINTS_PER_CORRECT} נק' · רצף של ${correctCount} נכונות!`
+            : `נכון! +${POINTS_PER_CORRECT} נק'`;
+        if (bigCelebration) celebrate(selectedBtn);
         playCorrect();
     } else {
         wrongCount++;

@@ -144,6 +144,20 @@
         .feedback-banner.correct-fb { background: rgba(144,190,109,0.15); border: 1px solid rgba(144,190,109,0.3); color: var(--accent2); }
         .feedback-banner.wrong-fb   { background: rgba(249,65,68,0.12);   border: 1px solid rgba(249,65,68,0.3);   color: #ff8080; }
 
+        /* Explanation panel (shown after wrong answer when explain exists) */
+        #explain-panel { display: none; background: rgba(167,139,250,0.08); border: 1px solid rgba(167,139,250,0.3); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; color: var(--text); }
+        #explain-panel.show { display: block; animation: fadeSlideIn 0.3s ease forwards; }
+        #explain-panel .exp-title { font-weight: 800; font-size: 1rem; color: var(--purple); margin-bottom: 8px; }
+        #explain-panel .exp-body { font-size: 0.92rem; line-height: 1.7; }
+        #explain-panel .exp-step { color: var(--muted); margin-bottom: 10px; }
+        #explain-panel .exp-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; flex-wrap: wrap; direction: ltr; justify-content: flex-end; }
+        #explain-panel .exp-label { font-weight: 700; color: var(--accent); min-width: 95px; direction: rtl; }
+        #explain-panel .exp-cells { display: inline-flex; gap: 4px; flex-wrap: wrap; direction: ltr; }
+        #explain-panel .exp-cell { background: rgba(255,255,255,0.06); padding: 3px 9px; border-radius: 6px; font-weight: 700; font-family: 'Fredoka One', cursive; min-width: 26px; text-align: center; }
+        #explain-panel .exp-cell.exp-match { background: var(--accent2); color: var(--bg); box-shadow: 0 0 10px rgba(144,190,109,0.5); }
+        #explain-panel .exp-result { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.15); font-weight: 700; font-size: 1rem; text-align: center; }
+        #explain-panel .exp-result b { color: var(--accent2); font-size: 1.2rem; font-family: 'Fredoka One', cursive; }
+
         #next-btn { width: 100%; background: linear-gradient(135deg, var(--purple), #7c3aed); border: none; border-radius: 13px; padding: 15px; color: white; font-family: 'Rubik', sans-serif; font-size: 0.98rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: none; box-shadow: 0 6px 24px rgba(124,58,237,0.35); }
         #next-btn:hover { transform: translateY(-2px); }
         #next-btn.show { display: block; }
@@ -247,6 +261,7 @@
         <span id="feedback-icon">✅</span>
         <span id="feedback-text">כל הכבוד!</span>
     </div>
+    <div id="explain-panel"></div>
     <button id="next-btn">המשך ←</button>
 </div>
 
@@ -376,6 +391,33 @@ const ROUND_SIZE = 20;
 // ── Fraction helpers ──────────────────────────────────────────────
 function f(n, d) { return `<span class="frac"><span class="num">${n}</span><span class="den">${d}</span></span>`; }
 function m(w, n, d) { return `<span class="mixed"><span class="whole">${w}</span>${f(n,d)}</span>`; }
+
+// ── Math helpers (for explanations) ────────────────────────────────
+function gcd(a, b){ return b === 0 ? Math.abs(a) : gcd(b, a % b); }
+function lcm(a, b){ return Math.abs(a * b) / gcd(a, b); }
+function lcmAll(nums){ return nums.reduce((acc, n) => lcm(acc, n)); }
+
+// LCD step-by-step explanation: list multiples of each number until the first common multiple
+function lcdExplain(...nums){
+    const result = lcmAll(nums);
+    const rows = nums.map(n => {
+        const mults = [];
+        for (let k = 1; k * n <= result; k++) mults.push(k * n);
+        const last = mults[mults.length - 1];
+        const cells = mults.map(v =>
+            `<span class="exp-cell${v === last ? ' exp-match' : ''}">${v}</span>`
+        ).join("");
+        return `<div class="exp-row"><span class="exp-label">כפולות של ${n}:</span><span class="exp-cells">${cells}</span></div>`;
+    }).join("");
+    return `
+        <div class="exp-title">🧠 איך פותרים?</div>
+        <div class="exp-body">
+            <div class="exp-step">סופרים את הכפולות של כל מספר עד שמוצאים מספר שמופיע אצל כולם:</div>
+            ${rows}
+            <div class="exp-result">המכנה המשותף הקטן ביותר: <b>${result}</b> ✨</div>
+        </div>
+    `;
+}
 function gcd(a,b){ return b===0?a:gcd(b,a%b); }
 function simplify(n,d){ const g=gcd(Math.abs(n),Math.abs(d)); return [n/g, d/g]; }
 function fStr(n,d){ const [sn,sd]=simplify(n,d); return sd===1?`${sn}`:`${sn}/${sd}`; }
@@ -477,13 +519,13 @@ const questions = [
 // Q18
 { topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(5,6)} − ${f(2,6)} =</span>`, options:()=>[f(3,6),f(1,2),f(2,6),f(4,6)], correct:0, correctText:"3/6 = 1/2" },
 // Q19
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2 ו-4?`, options:()=>["2","4","6","8"], correct:1, correctText:"4" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2 ו-4?`, options:()=>["2","4","6","8"], correct:1, correctText:"4", explain:()=>lcdExplain(2,4) },
 // Q20
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3 ו-6?`, options:()=>["3","6","9","12"], correct:1, correctText:"6" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3 ו-6?`, options:()=>["3","6","9","12"], correct:1, correctText:"6", explain:()=>lcdExplain(3,6) },
 // Q21
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 5 ו-10?`, options:()=>["5","10","15","20"], correct:1, correctText:"10" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 5 ו-10?`, options:()=>["5","10","15","20"], correct:1, correctText:"10", explain:()=>lcdExplain(5,10) },
 // Q22
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2 ו-3?`, options:()=>["4","5","6","9"], correct:2, correctText:"6" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2 ו-3?`, options:()=>["4","5","6","9"], correct:2, correctText:"6", explain:()=>lcdExplain(2,3) },
 // Q23
 { topic:"decimals", q:()=>`${f(1,2)} כמספר עשרוני:`, options:()=>["0.2","0.5","0.12","0.05"], correct:1, correctText:"0.5" },
 // Q24
@@ -501,11 +543,11 @@ const questions = [
 // Q30
 { topic:"fractions", q:()=>`${f(1,3)} = ${f("?",9)}  המונה החסר:`, options:()=>["2","3","4","6"], correct:1, correctText:"3" },
 // Q31
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 4 ו-6?`, options:()=>["8","10","12","24"], correct:2, correctText:"12" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 4 ו-6?`, options:()=>["8","10","12","24"], correct:2, correctText:"12", explain:()=>lcdExplain(4,6) },
 // Q32
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 4 ו-5?`, options:()=>["10","16","20","24"], correct:2, correctText:"20" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 4 ו-5?`, options:()=>["10","16","20","24"], correct:2, correctText:"20", explain:()=>lcdExplain(4,5) },
 // Q33
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3 ו-4?`, options:()=>["6","8","12","24"], correct:2, correctText:"12" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3 ו-4?`, options:()=>["6","8","12","24"], correct:2, correctText:"12", explain:()=>lcdExplain(3,4) },
 // Q34
 { topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,2)} + ${f(1,4)} =</span>`, options:()=>[f(2,6),f(3,4),f(2,4),f(1,4)], correct:1, correctText:"3/4" },
 // Q35
@@ -569,9 +611,9 @@ const questions = [
 // Q64
 { topic:"decimals", q:()=>`${m(1,3,10)} כמספר עשרוני:`, options:()=>["0.13","1.03","1.3","3.1"], correct:2, correctText:"1.3" },
 // Q65
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 6 ו-8?`, options:()=>["12","18","24","48"], correct:2, correctText:"24" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 6 ו-8?`, options:()=>["12","18","24","48"], correct:2, correctText:"24", explain:()=>lcdExplain(6,8) },
 // Q66
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 9 ו-6?`, options:()=>["18","27","36","54"], correct:0, correctText:"18" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 9 ו-6?`, options:()=>["18","27","36","54"], correct:0, correctText:"18", explain:()=>lcdExplain(9,6) },
 // Q67
 { topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(5,6)} + ${f(1,8)} =</span>`, options:()=>[f(6,14),f(23,24),f(13,24),f(6,8)], correct:1, correctText:"23/24" },
 // Q68
@@ -601,9 +643,9 @@ const questions = [
 // Q80
 { topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(2,1,4)} − ${f(3,4)} =</span>`, options:()=>[ m(1,2,4), m(1,1,2), m(1,3,4), m(2,1,2) ], correct:1, correctText:"1 ו-1/2" },
 // Q81
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2, 3 ו-4?`, options:()=>["6","8","12","24"], correct:2, correctText:"12" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2, 3 ו-4?`, options:()=>["6","8","12","24"], correct:2, correctText:"12", explain:()=>lcdExplain(2,3,4) },
 // Q82
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3, 4 ו-6?`, options:()=>["12","18","24","36"], correct:0, correctText:"12" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3, 4 ו-6?`, options:()=>["12","18","24","36"], correct:0, correctText:"12", explain:()=>lcdExplain(3,4,6) },
 // Q83
 { topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,2)} + ${f(1,3)} + ${f(1,6)} =</span>`, options:()=>["1",f(3,11),f(1,2),f(5,6)], correct:0, correctText:"1" },
 // Q84
@@ -633,7 +675,7 @@ const questions = [
 // Q96 — borrowing
 { topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(4,1,3)} − ${m(2,2,3)} =</span>`, options:()=>[ m(1,2,3), m(2,1,3), m(2,2,3), m(1,1,3) ], correct:0, correctText:"1 ו-2/3" },
 // Q97
-{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 6, 9 ו-12?`, options:()=>["18","24","36","72"], correct:2, correctText:"36" },
+{ topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 6, 9 ו-12?`, options:()=>["18","24","36","72"], correct:2, correctText:"36", explain:()=>lcdExplain(6,9,12) },
 // Q98
 { topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,6)} + ${f(2,9)} + ${f(1,12)} =</span>`, options:()=>[f(4,27),f(13,36),f(4,9),f(7,18)], correct:1, correctText:"13/36" },
 // Q99
@@ -675,6 +717,7 @@ const optionsContainer = document.getElementById("options-container");
 const feedbackBanner = document.getElementById("feedback-banner");
 const feedbackIcon   = document.getElementById("feedback-icon");
 const feedbackText   = document.getElementById("feedback-text");
+const explainPanel   = document.getElementById("explain-panel");
 const nextBtn        = document.getElementById("next-btn");
 const quizContainer  = document.getElementById("quiz-container");
 const roundContainer = document.getElementById("round-container");
@@ -766,6 +809,8 @@ function loadQuestion(){
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     nextBtn.classList.remove("show");
     feedbackBanner.classList.remove("show","correct-fb","wrong-fb");
+    explainPanel.classList.remove("show");
+    explainPanel.innerHTML = "";
     optionsContainer.innerHTML = "";
 
     const q  = questions[currentQIdx];
@@ -822,6 +867,11 @@ function selectOption(selectedIdx, selectedBtn){
         feedbackText.textContent = "לא נכון. הרצף התאפס — נשארים בקבוצה 💪";
         playWrong();
         scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
+        // Show step-by-step explanation if this question has one
+        if (typeof q.explain === "function") {
+            explainPanel.innerHTML = q.explain();
+            explainPanel.classList.add("show");
+        }
     }
     // Update progress bar after streak change
     const pct = ((currentGroupIdx + streak / STREAK_TARGET) / GROUP_NAMES.length) * 100;
@@ -854,9 +904,9 @@ function selectOption(selectedIdx, selectedBtn){
         // Auto-advance after short pause
         setTimeout(advance, CORRECT_PAUSE);
     } else {
-        // Wait for child to read the correct answer
+        // Wait for child to read the explanation / correct answer
         nextBtn.classList.add("show");
-        nextBtn.textContent = "המשך ←";
+        nextBtn.textContent = (typeof q.explain === "function") ? "הבנתי ←" : "המשך ←";
     }
 }
 

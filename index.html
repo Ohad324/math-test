@@ -114,6 +114,7 @@
         .topic-lcd        { background: rgba(167,139,250,0.1); color: var(--purple);  border: 1px solid rgba(167,139,250,0.25); }
         .topic-number-line{ background: rgba(167,139,250,0.1); color: var(--purple);  border: 1px solid rgba(167,139,250,0.25); }
         .topic-decimals   { background: rgba(144,190,109,0.1); color: var(--accent2); border: 1px solid rgba(144,190,109,0.25); }
+        .topic-geometry   { background: rgba(249,199,79,0.1);  color: var(--accent);  border: 1px solid rgba(249,199,79,0.25); }
 
         #question-text { font-size: 1.15rem; font-weight: 700; line-height: 2; color: var(--text); }
 
@@ -779,6 +780,35 @@ function roundDecimalExplain(num, placeName){
         eqLine(`${num} ≈ <span class="exp-answer">${ans}</span>`)
     );
 }
+// ── Geometry explanations ─────────────────────────────────────────
+function geoExplain(title, ...lines){
+    return mkExplain(title, lines.map(l => step(l)).join(""));
+}
+function perimeterExplain(shape, sides, perim){
+    return mkExplain("חישוב היקף",
+        step(`היקף = סכום אורכי כל הצלעות.`) +
+        eqLine(`${shape}: ${sides.join(" + ")} = <span class="exp-answer">${perim}</span>`)
+    );
+}
+function missingSideExplain(perim, knownSides, missing){
+    return mkExplain("צלע חסרה",
+        step(`היקף = סכום כל הצלעות. אם יש לנו היקף ומספר צלעות, אפשר למצוא את החסרה.`) +
+        eqLine(`${perim} − (${knownSides.join(" + ")}) = <span class="exp-answer">${missing}</span>`)
+    );
+}
+function areaExplain(shape, formula, result){
+    return mkExplain("חישוב שטח",
+        step(`שטח של ${shape}: ${formula}`) +
+        eqLine(`= <span class="exp-answer">${result}</span>`)
+    );
+}
+function equilateralSideExplain(perim, side){
+    return mkExplain("צלע במשולש שווה-צלעות",
+        step(`במשולש שווה-צלעות כל ה-3 צלעות שוות.`) +
+        eqLine(`${perim} ÷ 3 = <span class="exp-answer">${side}</span>`)
+    );
+}
+
 function fracVsDecimalExplain(fracN, fracD, decStr){
     const fVal = fracN / fracD;
     const dVal = parseFloat(decStr);
@@ -869,6 +899,7 @@ const TOPICS = {
     lcd:         { label:"מכנה משותף",           badge:"topic-lcd" },
     numberLine:  { label:"ציר המספרים",          badge:"topic-number-line" },
     decimals:    { label:"מספרים עשרוניים",      badge:"topic-decimals" },
+    geometry:    { label:"גאומטריה",              badge:"topic-geometry" },
 };
 
 // ── All 100 questions ordered by ascending difficulty (Q1 easiest, Q100 hardest)
@@ -1212,6 +1243,80 @@ const questions = [
 // Q150
 { topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 250 ÷ 100 =</span>`, options:()=>["2.5","25","0.25","250"], correct:0, correctText:"2.5", explain:()=>divByPow10Explain("250",100) },
 
+// ══════════════════════════════════════════════════════════════════
+// GROUP P (Q151-160): Geometry — shapes and angles basics
+// ══════════════════════════════════════════════════════════════════
+// Q151
+{ topic:"geometry", q:()=>`כמה צלעות יש למרובע?`, options:()=>["3","4","5","6"], correct:1, correctText:"4", explain:()=>geoExplain("מרובע","מרובע = צורה עם <b>4</b> צלעות. דוגמאות: ריבוע, מלבן, מקבילית, טרפז.") },
+// Q152
+{ topic:"geometry", q:()=>`כמה צלעות יש למשולש?`, options:()=>["3","4","5","6"], correct:0, correctText:"3", explain:()=>geoExplain("משולש","משולש = צורה עם <b>3</b> צלעות ו-3 זוויות.") },
+// Q153
+{ topic:"geometry", q:()=>`סכום הזוויות במשולש:`, options:()=>["90°","180°","270°","360°"], correct:1, correctText:"180°", explain:()=>geoExplain("סכום זוויות במשולש","בכל משולש סכום שלוש הזוויות הוא תמיד <b>180°</b>.") },
+// Q154
+{ topic:"geometry", q:()=>`סכום הזוויות במרובע:`, options:()=>["180°","270°","360°","540°"], correct:2, correctText:"360°", explain:()=>geoExplain("סכום זוויות במרובע","במרובע סכום הזוויות הוא <b>360°</b> (פי 2 ממשולש, כי אפשר לחלק מרובע ל-2 משולשים).") },
+// Q155
+{ topic:"geometry", q:()=>`זווית ישרה היא בדיוק:`, options:()=>["45°","90°","180°","360°"], correct:1, correctText:"90°", explain:()=>geoExplain("זווית ישרה","זווית ישרה = בדיוק <b>90°</b> (כמו בפינה של ריבוע).") },
+// Q156
+{ topic:"geometry", q:()=>`זווית קהה היא:`, options:()=>["קטנה מ-90°","שווה ל-90°","גדולה מ-90° וקטנה מ-180°","גדולה מ-180°"], correct:2, correctText:"גדולה מ-90° וקטנה מ-180°", explain:()=>geoExplain("זווית קהה","זווית <b>קהה</b> = גדולה מ-90° אך קטנה מ-180°.") },
+// Q157
+{ topic:"geometry", q:()=>`זווית חדה היא:`, options:()=>["קטנה מ-90°","שווה ל-90°","גדולה מ-90°","שווה ל-180°"], correct:0, correctText:"קטנה מ-90°", explain:()=>geoExplain("זווית חדה","זווית <b>חדה</b> = קטנה מ-90°.") },
+// Q158
+{ topic:"geometry", q:()=>`כמה זוגות צלעות מקבילות יש למקבילית?`, options:()=>["0","1","2","4"], correct:2, correctText:"2", explain:()=>geoExplain("מקבילית","למקבילית יש <b>2 זוגות</b> צלעות מקבילות (לכן השם 'מקבילית').") },
+// Q159
+{ topic:"geometry", q:()=>`כמה זוגות צלעות מקבילות יש לטרפז?`, options:()=>["0","1","2","3"], correct:1, correctText:"1", explain:()=>geoExplain("טרפז","לטרפז יש <b>זוג אחד</b> של צלעות מקבילות (זה ההבדל ממקבילית).") },
+// Q160
+{ topic:"geometry", q:()=>`צורה עם 4 צלעות שוות וכל הזוויות 90°:`, options:()=>["מקבילית","מעוין","מלבן","ריבוע"], correct:3, correctText:"ריבוע", explain:()=>geoExplain("ריבוע","<b>ריבוע</b> = 4 צלעות שוות + 4 זוויות של 90°. מעוין יש לו רק את הצלעות השוות, מלבן רק את הזוויות.") },
+
+// ══════════════════════════════════════════════════════════════════
+// GROUP Q (Q161-170): Triangles — types and angles
+// ══════════════════════════════════════════════════════════════════
+// Q161
+{ topic:"geometry", q:()=>`משולש עם 3 צלעות שוות נקרא:`, options:()=>["שונה-צלעות","שווה-שוקיים","שווה-צלעות","ישר-זווית"], correct:2, correctText:"שווה-צלעות", explain:()=>geoExplain("משולש שווה-צלעות","משולש עם כל ה-3 צלעות שוות = <b>שווה-צלעות</b>. גם הזוויות שלו שוות (60° כל אחת).") },
+// Q162
+{ topic:"geometry", q:()=>`משולש עם 2 צלעות שוות נקרא:`, options:()=>["שונה-צלעות","שווה-שוקיים","שווה-צלעות","קהה"], correct:1, correctText:"שווה-שוקיים", explain:()=>geoExplain("משולש שווה-שוקיים","משולש עם <b>שתי צלעות שוות</b> נקרא שווה-שוקיים. שתי הזוויות מול הצלעות השוות גם הן שוות.") },
+// Q163
+{ topic:"geometry", q:()=>`משולש עם 3 צלעות שונות נקרא:`, options:()=>["שונה-צלעות","שווה-שוקיים","שווה-צלעות","חד-זווית"], correct:0, correctText:"שונה-צלעות", explain:()=>geoExplain("משולש שונה-צלעות","משולש שכל הצלעות שלו שונות = <b>שונה-צלעות</b>.") },
+// Q164
+{ topic:"geometry", q:()=>`במשולש שווה-צלעות, כל זווית היא:`, options:()=>["45°","60°","90°","30°"], correct:1, correctText:"60°", explain:()=>geoExplain("זוויות במשולש שווה-צלעות","סכום זוויות במשולש = 180°. אם כולן שוות → <b>180 ÷ 3 = 60°</b> כל אחת.") },
+// Q165
+{ topic:"geometry", q:()=>`במשולש ישר-זווית, אחת הזוויות היא:`, options:()=>["60°","90°","180°","45°"], correct:1, correctText:"90°", explain:()=>geoExplain("משולש ישר-זווית","משולש <b>ישר-זווית</b> = יש בו זווית של 90°. שתי האחרות חדות וסכומן 90°.") },
+// Q166
+{ topic:"geometry", q:()=>`משולש קהה-זווית מכיל זווית:`, options:()=>["קטנה מ-90°","שווה ל-90°","גדולה מ-90°","אין מספיק מידע"], correct:2, correctText:"גדולה מ-90°", explain:()=>geoExplain("משולש קהה-זווית","משולש <b>קהה-זווית</b> = יש בו זווית גדולה מ-90°. שתי האחרות חייבות להיות חדות.") },
+// Q167
+{ topic:"geometry", q:()=>`במשולש חד-זווית, כל הזוויות:`, options:()=>["קטנות מ-90°","גדולות מ-90°","שוות","ישרות"], correct:0, correctText:"קטנות מ-90°", explain:()=>geoExplain("משולש חד-זווית","כל הזוויות בו <b>חדות</b> (קטנות מ-90°).") },
+// Q168
+{ topic:"geometry", q:()=>`במשולש 2 זוויות הן 50° ו-60°. הזווית השלישית:`, options:()=>["50°","60°","70°","90°"], correct:2, correctText:"70°", explain:()=>geoExplain("מציאת זווית חסרה","סכום זוויות במשולש = 180°. <b>180 − 50 − 60 = 70°</b>.") },
+// Q169
+{ topic:"geometry", q:()=>`במשולש שווה-שוקיים, כמה צלעות שוות?`, options:()=>["2","3","4","אף אחת"], correct:0, correctText:"2", explain:()=>geoExplain("שווה-שוקיים","<b>שתי</b> שוקיים שוות (לכן השם), והצלע השלישית = הבסיס.") },
+// Q170
+{ topic:"geometry", q:()=>`במשולש 2 זוויות הן 60° כל אחת. הזווית השלישית:`, options:()=>["30°","60°","90°","120°"], correct:1, correctText:"60°", explain:()=>geoExplain("שווה-צלעות","180 − 60 − 60 = <b>60°</b>. כל הזוויות 60° → זה משולש שווה-צלעות.") },
+
+// ══════════════════════════════════════════════════════════════════
+// GROUP R (Q171-180): Perimeter & area
+// ══════════════════════════════════════════════════════════════════
+// Q171
+{ topic:"geometry", q:()=>`היקף ריבוע שצלעו 5 ס"מ:`, options:()=>["10","15","20","25"], correct:2, correctText:"20 ס\"מ", explain:()=>perimeterExplain("ריבוע (4 צלעות שוות)", ["5","5","5","5"], "20 ס\"מ") },
+// Q172
+{ topic:"geometry", q:()=>`היקף משולש שווה-צלעות שצלעו 4 ס"מ:`, options:()=>["8","12","16","20"], correct:1, correctText:"12 ס\"מ", explain:()=>perimeterExplain("משולש שווה-צלעות", ["4","4","4"], "12 ס\"מ") },
+// Q173
+{ topic:"geometry", q:()=>`היקף מלבן בצלעות 3 ו-5 ס"מ:`, options:()=>["8","15","16","30"], correct:2, correctText:"16 ס\"מ", explain:()=>perimeterExplain("מלבן", ["3","5","3","5"], "16 ס\"מ") },
+// Q174
+{ topic:"geometry", q:()=>`היקף משולש שווה-צלעות 18 ס"מ. כל צלע:`, options:()=>["3","6","9","18"], correct:1, correctText:"6 ס\"מ", explain:()=>equilateralSideExplain("18 ס\"מ","6 ס\"מ") },
+// Q175
+{ topic:"geometry", q:()=>`היקף מקבילית 30 ס"מ. צלע אחת 7 ס"מ. הצלע השכנה:`, options:()=>["7","8","15","23"], correct:1, correctText:"8 ס\"מ", explain:()=>geoExplain("צלע במקבילית","במקבילית 2 זוגות צלעות שוות. סך 2 צלעות שכנות = היקף ÷ 2.") +
+   step(`30 ÷ 2 = 15, ואז 15 − 7 = <b>8</b>`) },
+// Q176
+{ topic:"geometry", q:()=>`שטח ריבוע שצלעו 4 ס"מ:`, options:()=>["8","12","16","32"], correct:2, correctText:"16 מ\"ר", explain:()=>areaExplain("ריבוע", "צלע × צלע = 4 × 4", "16 מ\"ר") },
+// Q177
+{ topic:"geometry", q:()=>`שטח מלבן בצלעות 3 ו-7 ס"מ:`, options:()=>["10","14","21","25"], correct:2, correctText:"21 מ\"ר", explain:()=>areaExplain("מלבן", "אורך × רוחב = 3 × 7", "21 מ\"ר") },
+// Q178
+{ topic:"geometry", q:()=>`היקף משולש שווה-שוקיים: בסיס 6, כל שוק 8. ההיקף:`, options:()=>["14","22","24","30"], correct:1, correctText:"22 ס\"מ", explain:()=>perimeterExplain("משולש שווה-שוקיים", ["8","8","6"], "22 ס\"מ") },
+// Q179
+{ topic:"geometry", q:()=>`היקף מלבן 4×6 ס"מ:`, options:()=>["10","20","24","30"], correct:1, correctText:"20 ס\"מ", explain:()=>perimeterExplain("מלבן", ["4","6","4","6"], "20 ס\"מ") },
+// Q180
+{ topic:"geometry", q:()=>`היקף ריבוע 36 ס"מ. מהי הצלע?`, options:()=>["4","6","9","12"], correct:2, correctText:"9 ס\"מ", explain:()=>geoExplain("צלע ריבוע מהיקף","בריבוע כל 4 צלעות שוות → צלע = היקף ÷ 4.") +
+   step(`36 ÷ 4 = <b>9</b>`) },
+
 ]; // end questions
 
 // ── State ─────────────────────────────────────────────────────────
@@ -1220,7 +1325,7 @@ const SESSION_SEC    = 600;                // 10 minutes
 const GROUP_SIZE     = 10;                 // 10 questions per group → 10 groups (A–J)
 const STREAK_TARGET  = 4;                  // 4 correct IN A ROW to advance group
 const CORRECT_PAUSE  = 800;                // ms to show ✓ feedback before auto-advance
-const GROUP_NAMES    = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O"];
+const GROUP_NAMES    = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R"];
 
 let currentQIdx       = 0;     // question index currently shown
 let currentGroupIdx   = 0;     // 0-based group index (0=A, 9=J)
@@ -1526,7 +1631,7 @@ function endSession(timeUp){
     if (localStorage.getItem('mt_admin') !== '1') return;
 
     document.body.classList.add('admin-mode');
-    const SECTIONS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O'];
+    const SECTIONS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
     const host = document.getElementById('adm-sections');
     SECTIONS.forEach((name, sIdx) => {
         const sec = document.createElement('div');

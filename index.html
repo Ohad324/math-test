@@ -157,6 +157,10 @@
         #explain-panel .exp-cell.exp-match { background: var(--accent2); color: var(--bg); box-shadow: 0 0 10px rgba(144,190,109,0.5); }
         #explain-panel .exp-result { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.15); font-weight: 700; font-size: 1rem; text-align: center; }
         #explain-panel .exp-result b { color: var(--accent2); font-size: 1.2rem; font-family: 'Fredoka One', cursive; }
+        #explain-panel .exp-eq { direction: ltr; text-align: center; margin: 8px 0; padding: 8px 6px; background: rgba(255,255,255,0.04); border-radius: 8px; font-size: 1.02rem; line-height: 2.2; }
+        #explain-panel .exp-answer { color: var(--accent2); font-weight: 800; padding: 0 4px; }
+        #explain-panel .frac.exp-answer { color: var(--accent2); }
+        #explain-panel .frac.exp-answer .num, #explain-panel .frac.exp-answer .den { color: var(--accent2); }
 
         #next-btn { width: 100%; background: linear-gradient(135deg, var(--purple), #7c3aed); border: none; border-radius: 13px; padding: 15px; color: white; font-family: 'Rubik', sans-serif; font-size: 0.98rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: none; box-shadow: 0 6px 24px rgba(124,58,237,0.35); }
         #next-btn:hover { transform: translateY(-2px); }
@@ -453,6 +457,256 @@ function mkExplain(title, bodyHtml){
     return `<div class="exp-title">🧠 ${title}</div><div class="exp-body">${bodyHtml}</div>`;
 }
 
+// Render an inline fraction with optional color hint
+function frac(n, d, cls=""){
+    return `<span class="frac ${cls}"><span class="num">${n}</span><span class="den">${d}</span></span>`;
+}
+function mixedHtml(w, n, d){
+    return `<span class="mixed"><span class="whole">${w}</span>${frac(n,d)}</span>`;
+}
+function step(txt){ return `<div class="exp-step">${txt}</div>`; }
+function eqLine(html){ return `<div class="exp-eq">${html}</div>`; }
+
+// ── Explanation helpers per topic ─────────────────────────────────
+
+// Simplify n/d to lowest terms by GCD
+function simplifyExplain(n, d){
+    const g = gcd(n, d);
+    const sn = n / g, sd = d / g;
+    return mkExplain("איך מצמצמים?",
+        step(`מוצאים את המספר הגדול ביותר שמחלק גם את ${n} וגם את ${d} בלי שארית.`) +
+        step(`<b>GCD(${n}, ${d}) = ${g}</b>`) +
+        step(`מחלקים את שניהם ב-${g}:`) +
+        eqLine(`${frac(n,d)} = ${frac(`${n}÷${g}`,`${d}÷${g}`)} = ${frac(sn,sd,"exp-answer")}`)
+    );
+}
+
+// Expand n/d by factor k → (n*k)/(d*k)
+function expandExplain(n, d, k){
+    return mkExplain("איך מרחיבים?",
+        step(`להרחיב פי ${k} = להכפיל גם את המונה וגם את המכנה ב-${k}.`) +
+        eqLine(`${frac(n,d)} = ${frac(`${n}×${k}`,`${d}×${k}`)} = ${frac(n*k, d*k, "exp-answer")}`)
+    );
+}
+
+// Find equivalent fraction: which option equals n/d?
+function equivalentExplain(n, d, eqN, eqD){
+    const k = eqN / n;
+    return mkExplain("איזה שבר שווה?",
+        step(`שני שברים שווים אם מכפילים את המונה והמכנה באותו מספר.`) +
+        eqLine(`${frac(n,d)} = ${frac(`${n}×${k}`,`${d}×${k}`)} = ${frac(eqN, eqD, "exp-answer")}`)
+    );
+}
+
+// Missing numerator: n1/d1 = ?/d2
+function missingNumExplain(n1, d1, d2){
+    const k = d2 / d1;
+    const ans = n1 * k;
+    return mkExplain("מציאת מונה חסר",
+        step(`כדי להפוך את המכנה מ-${d1} ל-${d2}, מכפילים ב-${k}.`) +
+        step(`מכפילים גם את המונה באותו מספר: ${n1} × ${k} = ${ans}`) +
+        eqLine(`${frac(n1,d1)} = ${frac(`<span class="exp-answer">${ans}</span>`, d2)}`)
+    );
+}
+
+// Same-denominator addition
+function addSameDenomExplain(n1, n2, d){
+    const sum = n1 + n2;
+    const g = gcd(sum, d);
+    let html = step(`מכנה משותף — מחברים את המונים, המכנה נשאר אותו דבר.`) +
+        eqLine(`${frac(n1,d)} + ${frac(n2,d)} = ${frac(`${n1}+${n2}`, d)} = ${frac(sum, d, g>1?"":"exp-answer")}`);
+    if (g > 1) html += step(`מצמצמים ב-${g}:`) + eqLine(`${frac(sum,d)} = ${frac(sum/g, d/g, "exp-answer")}`);
+    return mkExplain("חיבור שברים", html);
+}
+
+function subSameDenomExplain(n1, n2, d){
+    const diff = n1 - n2;
+    const g = gcd(Math.abs(diff) || 1, d);
+    let html = step(`מכנה משותף — מחסרים את המונים, המכנה נשאר אותו דבר.`) +
+        eqLine(`${frac(n1,d)} − ${frac(n2,d)} = ${frac(`${n1}−${n2}`, d)} = ${frac(diff, d, g>1?"":"exp-answer")}`);
+    if (g > 1) html += step(`מצמצמים ב-${g}:`) + eqLine(`${frac(diff,d)} = ${frac(diff/g, d/g, "exp-answer")}`);
+    return mkExplain("חיסור שברים", html);
+}
+
+// Different-denominator addition or subtraction
+function diffDenomExplain(op, n1, d1, n2, d2){
+    const L = lcm(d1, d2);
+    const k1 = L / d1, k2 = L / d2;
+    const nn1 = n1 * k1, nn2 = n2 * k2;
+    const result = op === "+" ? nn1 + nn2 : nn1 - nn2;
+    const g = gcd(Math.abs(result) || 1, L);
+    let html =
+        step(`מכנים שונים — צריך מכנה משותף. <b>LCD(${d1},${d2}) = ${L}</b>.`) +
+        step(`מרחיבים כל שבר עד שהמכנה יהיה ${L}:`) +
+        eqLine(`${frac(n1,d1)} = ${frac(`${n1}×${k1}`,`${d1}×${k1}`)} = ${frac(nn1, L)}`) +
+        eqLine(`${frac(n2,d2)} = ${frac(`${n2}×${k2}`,`${d2}×${k2}`)} = ${frac(nn2, L)}`) +
+        step(`עכשיו ${op === "+" ? "מחברים" : "מחסרים"} מונים:`) +
+        eqLine(`${frac(nn1,L)} ${op} ${frac(nn2,L)} = ${frac(result, L, g>1?"":"exp-answer")}`);
+    if (g > 1) html += step(`מצמצמים ב-${g}:`) + eqLine(`${frac(result,L)} = ${frac(result/g, L/g, "exp-answer")}`);
+    return mkExplain(op === "+" ? "חיבור שברים שונים" : "חיסור שברים שונים", html);
+}
+const addDiffDenomExplain = (n1,d1,n2,d2) => diffDenomExplain("+", n1,d1,n2,d2);
+const subDiffDenomExplain = (n1,d1,n2,d2) => diffDenomExplain("−", n1,d1,n2,d2);
+
+// Subtract fraction from 1: 1 − n/d = (d-n)/d
+function subFromOneExplain(n, d){
+    return mkExplain("חיסור משלם",
+        step(`רושמים את ה-1 כשבר עם אותו מכנה: <b>1 = ${frac(d,d)}</b>`) +
+        eqLine(`1 − ${frac(n,d)} = ${frac(d,d)} − ${frac(n,d)} = ${frac(`${d}−${n}`, d)} = ${frac(d-n, d, "exp-answer")}`)
+    );
+}
+
+// Three-fraction add (assumes mixable to LCM of all 3 dens)
+function addThreeExplain(n1,d1,n2,d2,n3,d3){
+    const L = lcmAll([d1,d2,d3]);
+    const k1=L/d1, k2=L/d2, k3=L/d3;
+    const nn1=n1*k1, nn2=n2*k2, nn3=n3*k3;
+    const sum = nn1+nn2+nn3;
+    const g = gcd(sum, L);
+    let html =
+        step(`מוצאים מכנה משותף לשלושת השברים: <b>LCD(${d1},${d2},${d3}) = ${L}</b>.`) +
+        eqLine(`${frac(n1,d1)} = ${frac(nn1,L)}, &nbsp; ${frac(n2,d2)} = ${frac(nn2,L)}, &nbsp; ${frac(n3,d3)} = ${frac(nn3,L)}`) +
+        step(`מחברים את המונים:`) +
+        eqLine(`${frac(nn1,L)} + ${frac(nn2,L)} + ${frac(nn3,L)} = ${frac(sum, L, g>1?"":"exp-answer")}`);
+    if (g > 1) {
+        const sg = sum/g, lg = L/g;
+        html += step(`מצמצמים ב-${g}:`) + eqLine(`${frac(sum,L)} = ${frac(sg, lg, "exp-answer")}` + (sg === lg ? ` = ${sg}` : ""));
+    }
+    return mkExplain("חיבור 3 שברים", html);
+}
+
+// Improper fraction to mixed: n/d → w + r/d
+function improperToMixedExplain(n, d){
+    const w = Math.floor(n / d);
+    const r = n - w * d;
+    return mkExplain("שבר לא אמיתי → מספר מעורב",
+        step(`מחלקים את ${n} ב-${d}:`) +
+        eqLine(`${n} ÷ ${d} = ${w} ושארית ${r}`) +
+        step(`<b>השלם</b> = ${w}, <b>השארית</b> נכנסת למונה:`) +
+        eqLine(`${frac(n,d)} = <span class="exp-answer">${mixedHtml(w, r, d)}</span>`)
+    );
+}
+
+// Mixed to improper: w n/d → (w*d + n)/d
+function mixedToImproperExplain(w, n, d){
+    const total = w * d + n;
+    return mkExplain("מספר מעורב → שבר לא אמיתי",
+        step(`מכפילים את השלם במכנה ומוסיפים את המונה:`) +
+        eqLine(`${mixedHtml(w,n,d)} = ${frac(`${w}×${d}+${n}`, d)} = ${frac(`${w*d}+${n}`, d)} = ${frac(total, d, "exp-answer")}`)
+    );
+}
+
+// Fraction → decimal (small d only — 2,4,5,8,10,100,1000)
+function fracToDecimalExplain(n, d){
+    const decimal = n / d;
+    return mkExplain("שבר → עשרוני",
+        step(`מחלקים את המונה במכנה:`) +
+        eqLine(`${frac(n,d)} = ${n} ÷ ${d} = <span class="exp-answer">${decimal}</span>`)
+    );
+}
+
+// Decimal → fraction (simN/simD is the expected answer form)
+function decimalToFractionExplain(decimalStr, simN, simD){
+    const places = (decimalStr.split(".")[1] || "").length;
+    const base = Math.pow(10, places);
+    const rawN = Math.round(parseFloat(decimalStr) * base);
+    const isAlreadyFinal = (rawN === simN && base === simD);
+    let html = step(`כל ספרה אחרי הנקודה = חלק חלקי 10, 100, 1000...`) +
+        step(`ל-${decimalStr} יש ${places} ספרות אחרי הנקודה → המכנה הוא ${base}:`) +
+        eqLine(`${decimalStr} = ${frac(rawN, base, isAlreadyFinal ? "exp-answer" : "")}`);
+    if (!isAlreadyFinal) {
+        const g = gcd(rawN, base);
+        html += step(`מצמצמים ב-${g}:`) + eqLine(`${frac(rawN, base)} = ${frac(simN, simD, "exp-answer")}`);
+    }
+    return mkExplain("עשרוני → שבר", html);
+}
+
+// Mixed number → decimal: w n/d → w + n/d
+function mixedToDecimalExplain(w, n, d){
+    const decFrac = n / d;
+    const total = w + decFrac;
+    return mkExplain("מספר מעורב → עשרוני",
+        step(`ממירים את החלק השברי לעשרוני, ומוסיפים לשלם:`) +
+        eqLine(`${mixedHtml(w,n,d)} = ${w} + ${decFrac} = <span class="exp-answer">${total}</span>`)
+    );
+}
+
+// Mixed-number add: w1 n1/d1 + w2 n2/d2
+function addMixedExplain(w1, n1, d1, w2, n2, d2){
+    const L = lcm(d1, d2);
+    const k1 = L/d1, k2 = L/d2;
+    const nn1 = n1*k1, nn2 = n2*k2;
+    const sumNum = nn1 + nn2;
+    let extraW = Math.floor(sumNum / L);
+    let remNum = sumNum - extraW * L;
+    const finalW = w1 + w2 + extraW;
+    const g = remNum > 0 ? gcd(remNum, L) : 1;
+    let html =
+        step(`מחברים את השלמים בנפרד ואת השברים בנפרד.`) +
+        step(`שלמים: ${w1} + ${w2} = ${w1+w2}`) +
+        step(`שברים: ${frac(n1,d1)} + ${frac(n2,d2)}`);
+    if (d1 !== d2) html += step(`LCD(${d1},${d2}) = ${L}`) + eqLine(`${frac(n1,d1)} = ${frac(nn1,L)}, &nbsp; ${frac(n2,d2)} = ${frac(nn2,L)}`);
+    html += eqLine(`= ${frac(sumNum, L)}`);
+    if (extraW > 0) html += step(`${sumNum}/${L} ≥ 1 → מוציאים ${extraW} שלם:`) + eqLine(`${frac(sumNum,L)} = ${extraW} + ${frac(remNum, L)}`);
+    let ansHtml;
+    if (remNum === 0) ansHtml = `<span class="exp-answer">${finalW}</span>`;
+    else if (g > 1) ansHtml = `<span class="exp-answer">${mixedHtml(finalW, remNum/g, L/g)}</span>`;
+    else ansHtml = `<span class="exp-answer">${mixedHtml(finalW, remNum, L)}</span>`;
+    html += step(`התשובה הסופית:`) + eqLine(ansHtml);
+    return mkExplain("חיבור מספרים מעורבים", html);
+}
+
+// Mixed-number sub: w1 n1/d1 − w2 n2/d2 (handles borrowing)
+function subMixedExplain(w1, n1, d1, w2, n2, d2){
+    const L = lcm(d1, d2);
+    const k1 = L/d1, k2 = L/d2;
+    let nn1 = n1 * k1, nn2 = n2 * k2;
+    let html =
+        step(`מחסרים שלם פחות שלם, שבר פחות שבר.`);
+    if (d1 !== d2) html += step(`LCD(${d1},${d2}) = ${L}`) + eqLine(`${frac(n1,d1)} = ${frac(nn1,L)}, &nbsp; ${frac(n2,d2)} = ${frac(nn2,L)}`);
+    let ww1 = w1, ww2 = w2;
+    if (nn1 < nn2) {
+        html += step(`${nn1}/${L} קטן מ-${nn2}/${L} → לוקחים 1 מהשלם:`) +
+                eqLine(`${ww1} → ${ww1-1}, &nbsp; השבר הופך ל-${frac(nn1 + L, L)}`);
+        ww1 -= 1; nn1 += L;
+    }
+    const wDiff = ww1 - ww2;
+    const nDiff = nn1 - nn2;
+    const g = nDiff > 0 ? gcd(nDiff, L) : 1;
+    html += step(`עכשיו מחסרים:`) +
+            eqLine(`שלמים: ${ww1} − ${ww2} = ${wDiff}, &nbsp; שברים: ${frac(nn1,L)} − ${frac(nn2,L)} = ${frac(nDiff, L)}`);
+    let ansHtml;
+    if (nDiff === 0) ansHtml = `<span class="exp-answer">${wDiff}</span>`;
+    else if (g > 1) ansHtml = `<span class="exp-answer">${mixedHtml(wDiff, nDiff/g, L/g)}</span>`;
+    else ansHtml = `<span class="exp-answer">${mixedHtml(wDiff, nDiff, L)}</span>`;
+    html += step(`התשובה הסופית:`) + eqLine(ansHtml);
+    return mkExplain("חיסור מספרים מעורבים", html);
+}
+
+// Int minus mixed: int − w n/d
+function intMinusMixedExplain(intVal, w, n, d){
+    // intVal − (w + n/d)
+    // = (intVal − w − 1) + (d−n)/d
+    const wDiff = intVal - w - 1;
+    const remN = d - n;
+    return mkExplain("שלם פחות מעורב",
+        step(`רושמים את ${intVal} כ-(${intVal-1}) + ${frac(d,d)} כדי שיהיה אפשר לחסר:`) +
+        eqLine(`${intVal} = ${intVal-1} + ${frac(d,d)}`) +
+        step(`עכשיו מחסרים:`) +
+        eqLine(`${intVal} − ${mixedHtml(w,n,d)} = (${intVal-1}−${w}) + ${frac(d,d)} − ${frac(n,d)} = ${wDiff} + ${frac(remN,d)} = <span class="exp-answer">${mixedHtml(wDiff, remN, d)}</span>`)
+    );
+}
+
+// Word problem wrapper: just calls add or sub diff/same denom with a Hebrew lead-in
+function wordAddExplain(n1,d1,n2,d2){
+    if (d1 === d2) return addSameDenomExplain(n1, n2, d1);
+    return addDiffDenomExplain(n1,d1,n2,d2);
+}
+function wordSubExplain(n1,d1,n2,d2){
+    if (d1 === d2) return subSameDenomExplain(n1, n2, d1);
+    return subDiffDenomExplain(n1,d1,n2,d2);
+}
+
 // LCD step-by-step explanation: list multiples of each number until the first common multiple
 function lcdExplain(...nums){
     const result = lcmAll(nums);
@@ -539,33 +793,33 @@ const TOPICS = {
 const questions = [
 
 // Q1
-{ topic:"fractions", q:()=>`צמצם: ${f(2,4)}`, options:()=>[f(1,2),f(2,2),f(1,4),f(3,4)], correct:0, correctText:"1/2" },
+{ topic:"fractions", q:()=>`צמצם: ${f(2,4)}`, options:()=>[f(1,2),f(2,2),f(1,4),f(3,4)], correct:0, correctText:"1/2", explain:()=>simplifyExplain(2,4) },
 // Q2
-{ topic:"fractions", q:()=>`צמצם: ${f(4,8)}`, options:()=>[f(1,2),f(2,3),f(1,4),f(3,8)], correct:0, correctText:"1/2" },
+{ topic:"fractions", q:()=>`צמצם: ${f(4,8)}`, options:()=>[f(1,2),f(2,3),f(1,4),f(3,8)], correct:0, correctText:"1/2", explain:()=>simplifyExplain(4,8) },
 // Q3
-{ topic:"fractions", q:()=>`צמצם: ${f(6,9)}`, options:()=>[f(2,3),f(3,9),f(1,3),f(3,4)], correct:0, correctText:"2/3" },
+{ topic:"fractions", q:()=>`צמצם: ${f(6,9)}`, options:()=>[f(2,3),f(3,9),f(1,3),f(3,4)], correct:0, correctText:"2/3", explain:()=>simplifyExplain(6,9) },
 // Q4
-{ topic:"fractions", q:()=>`צמצם: ${f(3,9)}`, options:()=>[f(1,3),f(2,3),f(3,3),f(1,9)], correct:0, correctText:"1/3" },
+{ topic:"fractions", q:()=>`צמצם: ${f(3,9)}`, options:()=>[f(1,3),f(2,3),f(3,3),f(1,9)], correct:0, correctText:"1/3", explain:()=>simplifyExplain(3,9) },
 // Q5
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,4)} + ${f(1,4)} =</span>`, options:()=>[f(1,2),f(2,8),f(1,4),f(2,4)], correct:0, correctText:"1/2" },
+{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,4)} + ${f(1,4)} =</span>`, options:()=>[f(1,2),f(2,8),f(1,4),f(2,4)], correct:0, correctText:"1/2", explain:()=>addSameDenomExplain(1,1,4) },
 // Q6
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,3)} + ${f(1,3)} =</span>`, options:()=>[f(2,3),f(2,6),f(1,6),f(3,3)], correct:0, correctText:"2/3" },
+{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,3)} + ${f(1,3)} =</span>`, options:()=>[f(2,3),f(2,6),f(1,6),f(3,3)], correct:0, correctText:"2/3", explain:()=>addSameDenomExplain(1,1,3) },
 // Q7
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,5)} + ${f(2,5)} =</span>`, options:()=>[f(3,5),f(3,10),f(2,5),f(1,5)], correct:0, correctText:"3/5" },
+{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,5)} + ${f(2,5)} =</span>`, options:()=>[f(3,5),f(3,10),f(2,5),f(1,5)], correct:0, correctText:"3/5", explain:()=>addSameDenomExplain(1,2,5) },
 // Q8
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(2,7)} + ${f(3,7)} =</span>`, options:()=>[f(5,7),f(5,14),f(6,7),f(1,7)], correct:0, correctText:"5/7" },
+{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(2,7)} + ${f(3,7)} =</span>`, options:()=>[f(5,7),f(5,14),f(6,7),f(1,7)], correct:0, correctText:"5/7", explain:()=>addSameDenomExplain(2,3,7) },
 // Q9
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(4,5)} − ${f(1,5)} =</span>`, options:()=>[f(3,5),f(3,10),f(5,5),f(4,10)], correct:0, correctText:"3/5" },
+{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(4,5)} − ${f(1,5)} =</span>`, options:()=>[f(3,5),f(3,10),f(5,5),f(4,10)], correct:0, correctText:"3/5", explain:()=>subSameDenomExplain(4,1,5) },
 // Q10
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(7,8)} − ${f(3,8)} =</span>`, options:()=>[f(4,8),f(1,2),f(3,8),f(5,8)], correct:0, correctText:"4/8 = 1/2" },
+{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(7,8)} − ${f(3,8)} =</span>`, options:()=>[f(4,8),f(1,2),f(3,8),f(5,8)], correct:0, correctText:"4/8 = 1/2", explain:()=>subSameDenomExplain(7,3,8) },
 // Q11
-{ topic:"fractions", q:()=>`הרחב את ${f(1,3)} פי 3`, options:()=>[f(3,9),f(2,6),f(1,9),f(3,3)], correct:0, correctText:"3/9" },
+{ topic:"fractions", q:()=>`הרחב את ${f(1,3)} פי 3`, options:()=>[f(3,9),f(2,6),f(1,9),f(3,3)], correct:0, correctText:"3/9", explain:()=>expandExplain(1,3,3) },
 // Q12
-{ topic:"fractions", q:()=>`הרחב את ${f(2,5)} פי 2`, options:()=>[f(4,10),f(2,10),f(4,5),f(4,7)], correct:0, correctText:"4/10" },
+{ topic:"fractions", q:()=>`הרחב את ${f(2,5)} פי 2`, options:()=>[f(4,10),f(2,10),f(4,5),f(4,7)], correct:0, correctText:"4/10", explain:()=>expandExplain(2,5,2) },
 // Q13
-{ topic:"fractions", q:()=>`איזה שבר שווה ל-${f(1,2)}?`, options:()=>[f(2,4),f(1,4),f(3,4),f(2,3)], correct:0, correctText:"2/4" },
+{ topic:"fractions", q:()=>`איזה שבר שווה ל-${f(1,2)}?`, options:()=>[f(2,4),f(1,4),f(3,4),f(2,3)], correct:0, correctText:"2/4", explain:()=>equivalentExplain(1,2,2,4) },
 // Q14
-{ topic:"fractions", q:()=>`איזה שבר שווה ל-${f(2,3)}?`, options:()=>[f(4,6),f(3,6),f(2,6),f(4,9)], correct:0, correctText:"4/6" },
+{ topic:"fractions", q:()=>`איזה שבר שווה ל-${f(2,3)}?`, options:()=>[f(4,6),f(3,6),f(2,6),f(4,9)], correct:0, correctText:"4/6", explain:()=>equivalentExplain(2,3,4,6) },
 // Q15
 { topic:"numberLine", q:()=>`מהו המספר בדיוק באמצע בין 0 ל-1?`, options:()=>[f(1,4),f(1,2),f(3,4),"0.2"], correct:1, correctText:"1/2",
   explain:()=>mkExplain("איך פותרים?",
@@ -579,9 +833,9 @@ const questions = [
         {value:0.25, label:"¼"}, {value:0.5, label:"²⁄₄"}, {value:0.75, label:"¾"}
     ]})) },
 // Q17
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,6)} + ${f(3,6)} =</span>`, options:()=>[f(4,6),f(2,3),f(4,12),f(3,6)], correct:0, correctText:"4/6" },
+{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,6)} + ${f(3,6)} =</span>`, options:()=>[f(4,6),f(2,3),f(4,12),f(3,6)], correct:0, correctText:"4/6", explain:()=>addSameDenomExplain(1,3,6) },
 // Q18
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(5,6)} − ${f(2,6)} =</span>`, options:()=>[f(3,6),f(1,2),f(2,6),f(4,6)], correct:0, correctText:"3/6 = 1/2" },
+{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(5,6)} − ${f(2,6)} =</span>`, options:()=>[f(3,6),f(1,2),f(2,6),f(4,6)], correct:0, correctText:"3/6 = 1/2", explain:()=>subSameDenomExplain(5,2,6) },
 // Q19
 { topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2 ו-4?`, options:()=>["2","4","6","8"], correct:1, correctText:"4", explain:()=>lcdExplain(2,4) },
 // Q20
@@ -591,11 +845,11 @@ const questions = [
 // Q22
 { topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2 ו-3?`, options:()=>["4","5","6","9"], correct:2, correctText:"6", explain:()=>lcdExplain(2,3) },
 // Q23
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − ${f(1,4)} =</span>`, options:()=>[f(3,4),f(1,4),f(2,4),f(4,4)], correct:0, correctText:"3/4" },
+{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − ${f(1,4)} =</span>`, options:()=>[f(3,4),f(1,4),f(2,4),f(4,4)], correct:0, correctText:"3/4", explain:()=>subFromOneExplain(1,4) },
 // Q24
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − ${f(2,3)} =</span>`, options:()=>[f(2,3),f(1,3),f(1,4),f(3,3)], correct:1, correctText:"1/3" },
+{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − ${f(2,3)} =</span>`, options:()=>[f(2,3),f(1,3),f(1,4),f(3,3)], correct:1, correctText:"1/3", explain:()=>subFromOneExplain(2,3) },
 // Q25
-{ topic:"fractions", q:()=>`${f(1,3)} = ${f("?",9)}  המונה החסר:`, options:()=>["2","3","4","6"], correct:1, correctText:"3" },
+{ topic:"fractions", q:()=>`${f(1,3)} = ${f("?",9)}  המונה החסר:`, options:()=>["2","3","4","6"], correct:1, correctText:"3", explain:()=>missingNumExplain(1,3,9) },
 // Q26
 { topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 4 ו-6?`, options:()=>["8","10","12","24"], correct:2, correctText:"12", explain:()=>lcdExplain(4,6) },
 // Q27
@@ -603,17 +857,17 @@ const questions = [
 // Q28
 { topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3 ו-4?`, options:()=>["6","8","12","24"], correct:2, correctText:"12", explain:()=>lcdExplain(3,4) },
 // Q29
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,2)} + ${f(1,4)} =</span>`, options:()=>[f(2,6),f(3,4),f(2,4),f(1,4)], correct:1, correctText:"3/4" },
+{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,2)} + ${f(1,4)} =</span>`, options:()=>[f(2,6),f(3,4),f(2,4),f(1,4)], correct:1, correctText:"3/4", explain:()=>addDiffDenomExplain(1,2,1,4) },
 // Q30
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,3)} + ${f(1,6)} =</span>`, options:()=>[f(2,9),f(1,2),f(3,9),f(2,6)], correct:1, correctText:"1/2" },
+{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,3)} + ${f(1,6)} =</span>`, options:()=>[f(2,9),f(1,2),f(3,9),f(2,6)], correct:1, correctText:"1/2", explain:()=>addDiffDenomExplain(1,3,1,6) },
 // Q31
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(3,4)} − ${f(1,2)} =</span>`, options:()=>[f(2,2),f(1,4),f(1,2),f(2,4)], correct:1, correctText:"1/4" },
+{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(3,4)} − ${f(1,2)} =</span>`, options:()=>[f(2,2),f(1,4),f(1,2),f(2,4)], correct:1, correctText:"1/4", explain:()=>subDiffDenomExplain(3,4,1,2) },
 // Q32
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(5,6)} − ${f(1,3)} =</span>`, options:()=>[f(4,3),f(1,2),f(4,6),f(1,3)], correct:1, correctText:"1/2" },
+{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(5,6)} − ${f(1,3)} =</span>`, options:()=>[f(4,3),f(1,2),f(4,6),f(1,3)], correct:1, correctText:"1/2", explain:()=>subDiffDenomExplain(5,6,1,3) },
 // Q33
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,2)} + ${f(1,6)} =</span>`, options:()=>[f(2,8),f(2,6),f(4,6),f(1,3)], correct:2, correctText:"4/6 = 2/3" },
+{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,2)} + ${f(1,6)} =</span>`, options:()=>[f(2,8),f(2,6),f(4,6),f(1,3)], correct:2, correctText:"4/6 = 2/3", explain:()=>addDiffDenomExplain(1,2,1,6) },
 // Q34
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(2,5)} + ${f(1,10)} =</span>`, options:()=>[f(3,15),f(5,10),f(1,2),f(3,10)], correct:1, correctText:"5/10 = 1/2" },
+{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(2,5)} + ${f(1,10)} =</span>`, options:()=>[f(3,15),f(5,10),f(1,2),f(3,10)], correct:1, correctText:"5/10 = 1/2", explain:()=>addDiffDenomExplain(2,5,1,10) },
 // Q35
 { topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(7,10)} − ${f(1,5)} =</span>`, options:()=>[f(6,5),f(1,2),f(5,10),f(3,10)], correct:1, correctText:"1/2" },
 // Q36
@@ -721,7 +975,7 @@ const questions = [
 // Q83
 { topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,2)} + ${f(1,3)} + ${f(1,6)} =</span>`, options:()=>["1",f(3,11),f(1,2),f(5,6)], correct:0, correctText:"1" },
 // Q84
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,4)} + ${f(1,3)} + ${f(1,6)} =</span>`, options:()=>[f(3,13),f(9,12),f(3,4),f(11,12)], correct:2, correctText:"3/4" },
+{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,4)} + ${f(1,3)} + ${f(1,6)} =</span>`, options:()=>[f(3,13),f(7,12),f(3,4),f(11,12)], correct:2, correctText:"3/4", explain:()=>addThreeExplain(1,4,1,3,1,6) },
 // Q85
 { topic:"fractions", q:()=>`המר לשבר לא אמיתי: ${m(4,3,5)}`, options:()=>[f(23,5),f(19,5),f(22,5),f(20,5)], correct:0, correctText:"23/5" },
 // Q86

@@ -1700,6 +1700,12 @@ function selectOption(selectedIdx, selectedBtn){
             : `נכון! +${POINTS_PER_CORRECT} נק'`;
         if (bigCelebration) celebrate(selectedBtn);
         playCorrect();
+        // Show step-by-step explanation if available — so the child can review the solution
+        const explainHtml = typeof q.explain === "function" ? q.explain() : null;
+        if (explainHtml) {
+            explainPanel.innerHTML = explainHtml;
+            explainPanel.classList.add("show");
+        }
     } else {
         wrongCount++;
         streak = 0;
@@ -1758,13 +1764,14 @@ function selectOption(selectedIdx, selectedBtn){
         })
     }).catch(() => {});
 
-    if (isRight) {
-        // Auto-advance after short pause
+    const hasExplain = typeof q.explain === "function";
+    if (isRight && !hasExplain) {
+        // No explanation → auto-advance after short pause
         setTimeout(advance, CORRECT_PAUSE);
     } else {
-        // Wait for child to read the explanation / correct answer
+        // Either wrong, or correct with explanation — let child read at their pace
         nextBtn.classList.add("show");
-        nextBtn.textContent = (typeof q.explain === "function") ? "הבנתי ←" : "המשך ←";
+        nextBtn.textContent = hasExplain ? (isRight ? "הבנתי, ממשיכים ←" : "הבנתי ←") : "המשך ←";
     }
 }
 

@@ -607,21 +607,22 @@ const questions = [
 // ── State ─────────────────────────────────────────────────────────
 const TOTAL          = questions.length;   // 100
 const SESSION_SEC    = 600;                // 10 minutes
-const RETRY_DELAY    = 4;                  // wait at least 3 OTHER questions before retry
+const GROUP_SIZE     = 10;                 // 10 questions per group → 10 groups (A–J)
+const STREAK_TARGET  = 3;                  // 3 correct IN A ROW to advance group
 const CORRECT_PAUSE  = 800;                // ms to show ✓ feedback before auto-advance
+const GROUP_NAMES    = ["A","B","C","D","E","F","G","H","I","J"];
 
-let currentQIdx  = 0;          // question index currently shown
-let queue        = [];         // upcoming question indices (sequential pool)
-let retryBucket  = [];         // [{ qIdx, eligibleAt }]
-let position     = 0;          // 1-based count of questions shown so far
-let correctCount = 0;          // unique questions answered correctly
-let wrongCount   = 0;          // total wrong attempts
-let attempts     = 0;          // total attempts (= position once started)
-let firstTryMap  = {};         // qIdx -> true if answered correctly on first try
-let answered     = false;
-let timeLeft     = SESSION_SEC;
-let timerHandle  = null;
-let sessionEnded = false;
+let currentQIdx       = 0;     // question index currently shown
+let currentGroupIdx   = 0;     // 0-based group index (0=A, 9=J)
+let groupRemaining    = [];    // shuffled unshown question indices in current group
+let streak            = 0;     // consecutive correct in current group
+let correctCount      = 0;     // total correct answers (incl. repeats)
+let wrongCount        = 0;     // total wrong answers
+let highestGroupReached = 0;   // 0-based — for end-of-session reporting
+let answered          = false;
+let timeLeft          = SESSION_SEC;
+let timerHandle       = null;
+let sessionEnded      = false;
 
 // ── DOM refs ──────────────────────────────────────────────────────
 const timerDisplay   = document.getElementById("timer-display");
@@ -664,24 +665,58 @@ function startTimer(){
 }
 function stopTimer(){ if (timerHandle) { clearInterval(timerHandle); timerHandle = null; } }
 
-// ── Queue management ──────────────────────────────────────────────
-function initQueue(){
-    queue = Array.from({length: TOTAL}, (_,i) => i);
-    retryBucket = [];
-    position = 0;
+// ── Group + queue management ──────────────────────────────────────
+function shuffle(arr){
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+function groupRange(idx){
+    const start = idx * GROUP_SIZE;
+    return Array.from({length: GROUP_SIZE}, (_,i) => start + i);
+}
+function reshuffleCurrentGroup(){
+    groupRemaining = shuffle(groupRange(currentGroupIdx));
+    // Avoid immediate repeat of the same question we just showed
+    if (groupRemaining.length > 1 && groupRemaining[0] === currentQIdx) {
+        [groupRemaining[0], groupRemaining[1]] = [groupRemaining[1], groupRemaining[0]];
+    }
+}
+function initSession(){
+    currentGroupIdx = 0;
+    streak = 0;
+    highestGroupReached = 0;
+    reshuffleCurrentGroup();
+}
+function advanceGroup(){
+    if (currentGroupIdx + 1 >= GROUP_NAMES.length) {
+        // Completed the last group — end session
+        endSession(false);
+        return false;
+    }
+    currentGroupIdx++;
+    streak = 0;
+    highestGroupReached = Math.max(highestGroupReached, currentGroupIdx);
+    reshuffleCurrentGroup();
+    // Notify parent of group advance
+    const player = getPlayerName();
+    fetch("https://ntfy.sh/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            topic:   NTFY_TOPIC,
+            title:   `Math · ${player} · קבוצה חדשה`,
+            message: `🎯 עבר לקבוצה ${GROUP_NAMES[currentGroupIdx]} (שאלות ${currentGroupIdx*GROUP_SIZE+1}-${(currentGroupIdx+1)*GROUP_SIZE})`,
+            tags:    ["trophy"]
+        })
+    }).catch(() => {});
+    return true;
 }
 function pickNext(){
-    // Find a retry that's eligible now
-    const ready = retryBucket.findIndex(item => item.eligibleAt <= position + 1);
-    if (ready >= 0) return retryBucket.splice(ready, 1)[0].qIdx;
-    // Otherwise next sequential
-    if (queue.length > 0) return queue.shift();
-    // Queue empty — flush remaining retries by earliest eligibility
-    if (retryBucket.length > 0) {
-        retryBucket.sort((a,b) => a.eligibleAt - b.eligibleAt);
-        return retryBucket.shift().qIdx;
-    }
-    return null;
+    if (groupRemaining.length === 0) reshuffleCurrentGroup();
+    return groupRemaining.shift();
 }
 
 // ── Load question ─────────────────────────────────────────────────
@@ -692,13 +727,13 @@ function loadQuestion(){
     feedbackBanner.classList.remove("show","correct-fb","wrong-fb");
     optionsContainer.innerHTML = "";
 
-    position++;
     const q  = questions[currentQIdx];
     const ti = TOPICS[q.topic];
 
-    progressText.textContent = `שאלה ${currentQIdx+1}`;
+    progressText.textContent = `קבוצה ${GROUP_NAMES[currentGroupIdx]} · רצף ${streak}/${STREAK_TARGET}`;
     scoreText.textContent    = `✓ ${correctCount}  ✗ ${wrongCount}`;
-    progressBar.style.width  = `${(correctCount/TOTAL)*100}%`;
+    const pct = ((currentGroupIdx + streak / STREAK_TARGET) / GROUP_NAMES.length) * 100;
+    progressBar.style.width  = `${pct}%`;
 
     topicBadge.textContent = ti.label;
     topicBadge.className   = `topic-badge ${ti.badge}`;
@@ -728,27 +763,28 @@ function selectOption(selectedIdx, selectedBtn){
 
     if (isRight) {
         selectedBtn.classList.add("correct");
-        if (!firstTryMap[currentQIdx]) {
-            firstTryMap[currentQIdx] = true;
-            correctCount++;
-        }
+        correctCount++;
+        streak++;
         scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
-        progressBar.style.width = `${(correctCount/TOTAL)*100}%`;
         feedbackBanner.classList.add("show","correct-fb");
         feedbackIcon.textContent = "✅";
-        feedbackText.textContent = "כל הכבוד! תשובה נכונה! 🎉";
+        feedbackText.textContent = streak >= STREAK_TARGET
+            ? `🎯 רצף ${STREAK_TARGET}! עוברים לקבוצה הבאה!`
+            : `כל הכבוד! רצף ${streak}/${STREAK_TARGET} 🎉`;
         playCorrect();
     } else {
         wrongCount++;
+        streak = 0;
         selectedBtn.classList.add("wrong");
         feedbackBanner.classList.add("show","wrong-fb");
         feedbackIcon.textContent = "❌";
-        feedbackText.textContent = "לא נכון. נחזור לשאלה הזו בהמשך 💪";
+        feedbackText.textContent = "לא נכון. הרצף התאפס — נשארים בקבוצה 💪";
         playWrong();
-        // Re-queue for retry after at least 3 OTHER questions
-        retryBucket.push({ qIdx: currentQIdx, eligibleAt: position + RETRY_DELAY });
         scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
     }
+    // Update progress bar after streak change
+    const pct = ((currentGroupIdx + streak / STREAK_TARGET) / GROUP_NAMES.length) * 100;
+    progressBar.style.width = `${pct}%`;
 
     allBtns.forEach((b,i)=>{ b.disabled=true; if(!isRight && i!==selectedIdx) b.classList.add("dimmed"); });
 
@@ -786,11 +822,13 @@ function selectOption(selectedIdx, selectedBtn){
 // ── Advance to next question (or end) ─────────────────────────────
 function advance(){
     if (sessionEnded) return;
-    const next = pickNext();
-    if (next === null) {
-        endSession(false);
-        return;
+    // If streak target reached, move to next group
+    if (streak >= STREAK_TARGET) {
+        const ok = advanceGroup();
+        if (!ok) return; // session ended (last group done)
     }
+    const next = pickNext();
+    if (next === undefined || next === null) { endSession(false); return; }
     currentQIdx = next;
     loadQuestion();
 }
@@ -809,17 +847,16 @@ function endSession(timeUp){
     roundContainer.classList.remove("show");
     finalContainer.classList.add("show");
 
-    const uniqueShown = TOTAL - queue.length;
-    const pct = Math.round((correctCount / TOTAL) * 100);
+    const totalAnswered = correctCount + wrongCount;
+    const accuracy = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
+    const groupReached = GROUP_NAMES[highestGroupReached];
     const timeUsed = SESSION_SEC - timeLeft;
 
-    document.getElementById("final-emoji").textContent = timeUp ? "⏰" : (pct>=80?"🏆":pct>=60?"😊":"💪");
-    document.getElementById("final-title").textContent = timeUp ? "נגמר הזמן!" : (pct>=80?"כל הכבוד!":pct>=60?"עבודה טובה!":"אפשר עוד!");
-    document.getElementById("final-sub").textContent   = timeUp
-        ? `הגעת לשאלה ${uniqueShown} מתוך ${TOTAL}`
-        : `סיימת את כל ${TOTAL} השאלות!`;
-    document.getElementById("final-total-score").textContent = `${correctCount}/${TOTAL}`;
-    document.getElementById("final-total-pct").textContent   = `ענה נכון · ${pct}%`;
+    document.getElementById("final-emoji").textContent = timeUp ? "⏰" : "🏆";
+    document.getElementById("final-title").textContent = timeUp ? "נגמר הזמן!" : "כל הכבוד! סיימת את כל הקבוצות!";
+    document.getElementById("final-sub").textContent   = `הגעת לקבוצה ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})`;
+    document.getElementById("final-total-score").textContent = `קבוצה ${groupReached}`;
+    document.getElementById("final-total-pct").textContent   = `דיוק · ${accuracy}%`;
     document.getElementById("final-correct").textContent = correctCount;
     document.getElementById("final-wrong").textContent   = wrongCount;
     document.getElementById("final-time").textContent    = fmtTime(timeUsed);
@@ -829,10 +866,11 @@ function endSession(timeUp){
         const msg = encodeURIComponent(
             `היי אבא! 👋\nסיימתי תרגול חשבון 📐\n\n` +
             `שחקן: ${player}\n` +
-            `${timeUp ? "⏰ נגמר הזמן" : "✅ סיימתי הכל"}\n\n` +
-            `הגעתי לשאלה: *${uniqueShown}/${TOTAL}*\n` +
-            `ענה נכון: *${correctCount}* ✅\n` +
+            `${timeUp ? "⏰ נגמר הזמן" : "✅ סיימתי את כל הקבוצות"}\n\n` +
+            `קבוצה שהגעתי אליה: *${groupReached}* (${highestGroupReached+1}/${GROUP_NAMES.length})\n` +
+            `נכון: *${correctCount}* ✅\n` +
             `טעויות: *${wrongCount}* ❌\n` +
+            `דיוק: *${accuracy}%*\n` +
             `זמן: *${fmtTime(timeUsed)}*`
         );
         window.open(`https://wa.me/${PARENT_PHONE}?text=${msg}`, '_blank');
@@ -846,7 +884,7 @@ function endSession(timeUp){
         body: JSON.stringify({
             topic:   NTFY_TOPIC,
             title:   `Math · ${player} · סיום`,
-            message: `${timeUp ? "⏰ נגמר הזמן" : "✅ סיים הכל"}\nהגיע ל: ${uniqueShown}/${TOTAL}\nנכון: ${correctCount} · טעויות: ${wrongCount}\nזמן: ${fmtTime(timeUsed)}`,
+            message: `${timeUp ? "⏰ נגמר הזמן" : "✅ סיים את כל הקבוצות"}\nקבוצה: ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})\nנכון: ${correctCount} · טעויות: ${wrongCount} · דיוק: ${accuracy}%\nזמן: ${fmtTime(timeUsed)}`,
             tags:    [timeUp ? "alarm_clock" : "checkered_flag"]
         })
     }).catch(() => {});
@@ -860,15 +898,15 @@ function endSession(timeUp){
     if (localStorage.getItem('mt_admin') !== '1') return;
 
     document.body.classList.add('admin-mode');
-    const SECTIONS = ['A','B','C','D','E'];
+    const SECTIONS = ['A','B','C','D','E','F','G','H','I','J'];
     const host = document.getElementById('adm-sections');
     SECTIONS.forEach((name, sIdx) => {
         const sec = document.createElement('div');
         sec.className = 'adm-section';
-        sec.innerHTML = `<div class="adm-section-h">Section ${name} &nbsp;<span style="opacity:0.6;font-weight:400">(${sIdx*20+1}–${(sIdx+1)*20})</span></div><div class="adm-grid"></div>`;
+        sec.innerHTML = `<div class="adm-section-h">קבוצה ${name} &nbsp;<span style="opacity:0.6;font-weight:400">(${sIdx*10+1}–${(sIdx+1)*10})</span></div><div class="adm-grid"></div>`;
         const grid = sec.querySelector('.adm-grid');
-        for (let i = 0; i < 20; i++) {
-            const qIdx = sIdx * 20 + i;
+        for (let i = 0; i < 10; i++) {
+            const qIdx = sIdx * 10 + i;
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'adm-btn';
@@ -886,12 +924,14 @@ function endSession(timeUp){
     });
 
     window.jumpToQuestion = function(idx){
-        // Admin override — show this exact question; remove it from queue/bucket if present
+        // Admin override — show this question; sync group to it, reset streak
         currentQIdx = idx;
+        currentGroupIdx = Math.floor(idx / GROUP_SIZE);
+        streak = 0;
+        highestGroupReached = Math.max(highestGroupReached, currentGroupIdx);
+        groupRemaining = shuffle(groupRange(currentGroupIdx).filter(q => q !== idx));
         answered = false;
         sessionEnded = false;
-        queue = queue.filter(q => q !== idx);
-        retryBucket = retryBucket.filter(it => it.qIdx !== idx);
         roundContainer.classList.remove('show');
         finalContainer.classList.remove('show');
         quizContainer.style.display = '';
@@ -910,9 +950,9 @@ function endSession(timeUp){
 window.onload = function(){
     renderPlayerTag();
     document.getElementById("player-change").addEventListener("click", changePlayerName);
-    initQueue();
+    initSession();
     currentQIdx = pickNext();
-    if (currentQIdx === null) return;
+    if (currentQIdx === undefined || currentQIdx === null) return;
     loadQuestion();
     startTimer();
     if (window.updateAdminActive) updateAdminActive();

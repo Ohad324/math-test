@@ -77,6 +77,8 @@
         #score-display { position: absolute; top: 36px; left: 0; font-family: 'Fredoka One', cursive; color: var(--accent); font-size: 1.15rem; background: rgba(249,199,79,0.12); padding: 3px 12px; border-radius: 100px; border: 1px solid rgba(249,199,79,0.3); }
         @keyframes scoreBump { 0%{transform:scale(1)} 30%{transform:scale(1.25);color:var(--accent2)} 100%{transform:scale(1);color:var(--accent)} }
         #score-display.bump { animation: scoreBump 0.5s ease; }
+        #spotify-player { margin: 14px auto 0; max-width: 360px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.35); }
+        #spotify-player iframe { display: block; border: 0; }
 
         /* Celebration emoji burst */
         #celebrate-layer { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
@@ -337,6 +339,9 @@
         <span class="life" data-i="2">🥷</span>
     </div>
     <div id="score-display">⭐ <span id="score-value">0</span></div>
+    <div id="spotify-player">
+        <iframe src="https://open.spotify.com/embed/track/4V362ZsZZxhZVO2zEoEzM4?utm_source=generator&theme=0" width="100%" height="80" frameborder="0" allowtransparency="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture" loading="lazy"></iframe>
+    </div>
 </div>
 
 <div class="progress-area" id="progress-area">

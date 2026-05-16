@@ -1500,20 +1500,42 @@ function restartSession(){
     if (!bgMusic.isMuted()) bgMusic.start();
 }
 
-// ── Background music (procedural chiptune loop) ───────────────────
+// ── Background music — 3 melodies (slow / medium / fast) ──────────
 const bgMusic = (function(){
-    // C major-ish happy loop, ~120 bpm — short notes for a "game" feel
-    const melody = [
-        // freq Hz, duration sec
-        [523.25, 0.25], [659.25, 0.25], [783.99, 0.25], [659.25, 0.25],
-        [523.25, 0.25], [587.33, 0.25], [659.25, 0.50],
-        [440.00, 0.25], [523.25, 0.25], [587.33, 0.50],
-        [523.25, 0.25], [440.00, 0.50],
-        [523.25, 0.25], [659.25, 0.25], [783.99, 0.50],
-        [880.00, 0.25], [783.99, 0.25], [659.25, 0.50],
-        [587.33, 0.50], [523.25, 0.75]
-    ];
-    let ctx = null, master = null, started = false, timerId = null, noteIdx = 0, gainEl = null;
+    // Each melody: array of [freq Hz, duration sec]
+    const MELODIES = {
+        // SLOW — calm lullaby in F major, ~60 bpm
+        slow: [
+            [349.23, 0.80], [392.00, 0.80], [440.00, 0.60], [349.23, 1.00],
+            [440.00, 0.80], [523.25, 0.80], [440.00, 0.60], [392.00, 1.20],
+            [349.23, 0.60], [392.00, 0.60], [440.00, 1.00], [392.00, 0.80],
+            [349.23, 0.60], [330.00, 0.60], [349.23, 1.40]
+        ],
+        // MEDIUM — cheerful waltz in C major, ~110 bpm (was the previous default)
+        med: [
+            [523.25, 0.25], [659.25, 0.25], [783.99, 0.25], [659.25, 0.25],
+            [523.25, 0.25], [587.33, 0.25], [659.25, 0.50],
+            [440.00, 0.25], [523.25, 0.25], [587.33, 0.50],
+            [523.25, 0.25], [440.00, 0.50],
+            [523.25, 0.25], [659.25, 0.25], [783.99, 0.50],
+            [880.00, 0.25], [783.99, 0.25], [659.25, 0.50],
+            [587.33, 0.50], [523.25, 0.75]
+        ],
+        // FAST — energetic chiptune in E major, ~160 bpm
+        fast: [
+            [659.25, 0.12], [783.99, 0.12], [987.77, 0.12], [783.99, 0.12],
+            [659.25, 0.12], [880.00, 0.12], [783.99, 0.24],
+            [659.25, 0.12], [523.25, 0.12], [659.25, 0.12], [783.99, 0.24],
+            [880.00, 0.12], [987.77, 0.12], [1046.50, 0.18],
+            [987.77, 0.12], [783.99, 0.12], [659.25, 0.24],
+            [523.25, 0.12], [587.33, 0.12], [659.25, 0.24],
+            [523.25, 0.36]
+        ]
+    };
+    const ORDER = ["off","slow","med","fast"];
+    const ICONS = { off:"🔇", slow:"🐢", med:"🎵", fast:"🚀" };
+    let ctx = null, master = null, started = false, timerId = null, noteIdx = 0;
+    let currentMelody = MELODIES.med;
     function playNote(freq, dur){
         const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
         o1.type = "triangle"; o1.frequency.value = freq;
@@ -1529,41 +1551,59 @@ const bgMusic = (function(){
     }
     function next(){
         if (!started) return;
-        const [freq, dur] = melody[noteIdx % melody.length];
+        const [freq, dur] = currentMelody[noteIdx % currentMelody.length];
         playNote(freq, dur);
         noteIdx++;
         timerId = setTimeout(next, dur * 1000);
     }
+    function ensureCtx(){
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === "suspended") ctx.resume();
+        if (!master) { master = ctx.createGain(); master.gain.value = 0.04; master.connect(ctx.destination); }
+    }
     return {
-        start(){
-            if (started) return;
+        // Read user's chosen tempo (default = medium)
+        getMode(){ return localStorage.getItem("mt_music") || "med"; },
+        // Cycle: off → slow → med → fast → off
+        cycle(){
+            const cur = this.getMode();
+            const i = ORDER.indexOf(cur);
+            const nextMode = ORDER[(i + 1) % ORDER.length];
+            localStorage.setItem("mt_music", nextMode);
+            this.apply();
+            return nextMode;
+        },
+        // Apply the stored mode (start/stop + swap melody)
+        apply(){
+            const mode = this.getMode();
+            this.stop();
+            if (mode === "off") return;
+            currentMelody = MELODIES[mode] || MELODIES.med;
             try {
-                if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-                if (ctx.state === "suspended") ctx.resume();
-                if (!master) { master = ctx.createGain(); master.gain.value = 0.04; master.connect(ctx.destination); }
+                ensureCtx();
                 started = true;
                 noteIdx = 0;
                 next();
             } catch(e){}
         },
+        start(){ if (this.getMode() !== "off") this.apply(); },
         stop(){
             started = false;
             if (timerId) { clearTimeout(timerId); timerId = null; }
         },
         stopAfter(ms){ setTimeout(() => this.stop(), ms); },
-        isMuted(){ return localStorage.getItem("mt_music") === "off"; },
-        setMuted(m){
-            if (m) { localStorage.setItem("mt_music","off"); this.stop(); }
-            else   { localStorage.removeItem("mt_music"); this.start(); }
-        }
+        isMuted(){ return this.getMode() === "off"; },
+        setMuted(m){ if (m) { localStorage.setItem("mt_music","off"); this.stop(); } else { localStorage.removeItem("mt_music"); this.apply(); } },
+        currentIcon(){ return ICONS[this.getMode()]; }
     };
 })();
 function updateMusicButton(){
     const btn = document.getElementById("music-toggle");
     if (!btn) return;
-    const muted = bgMusic.isMuted();
-    btn.textContent = muted ? "🔇" : "🔊";
-    btn.classList.toggle("muted", muted);
+    btn.textContent = bgMusic.currentIcon();
+    btn.classList.toggle("muted", bgMusic.isMuted());
+    const labels = { off:"מוזיקה כבויה — לחץ לאיטית", slow:"איטי — לחץ לבינוני", med:"בינוני — לחץ למהיר", fast:"מהיר — לחץ לכיבוי" };
+    btn.title = labels[bgMusic.getMode()] || "מוזיקת רקע";
 }
 
 // ── Celebration: emoji burst + floating points ────────────────────
@@ -2005,10 +2045,10 @@ window.onload = function(){
     renderPlayerTag();
     document.getElementById("player-change").addEventListener("click", changePlayerName);
     document.getElementById("restart-btn").addEventListener("click", restartSession);
-    // Music toggle
+    // Music toggle — cycle off → slow → med → fast → off
     updateMusicButton();
     document.getElementById("music-toggle").addEventListener("click", () => {
-        bgMusic.setMuted(!bgMusic.isMuted());
+        bgMusic.cycle();
         updateMusicButton();
     });
     // Auto-start music on the first user interaction anywhere (browser audio policy)

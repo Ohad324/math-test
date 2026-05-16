@@ -383,7 +383,24 @@ function fStr(n,d){ const [sn,sd]=simplify(n,d); return sd===1?`${sn}`:`${sn}/${
 // ── Sound ─────────────────────────────────────────────────────────
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
-function getCtx(){ if(!audioCtx) audioCtx=new AudioCtx(); return audioCtx; }
+function getCtx(){
+    if (!audioCtx) audioCtx = new AudioCtx();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+}
+// iOS / mobile: AudioContext starts suspended until a user gesture. Unlock on first tap.
+function unlockAudio(){
+    try {
+        const ctx = getCtx();
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        g.gain.value = 0; o.connect(g); g.connect(ctx.destination);
+        o.start(0); o.stop(ctx.currentTime + 0.01);
+    } catch(e) {}
+    document.removeEventListener("touchstart", unlockAudio);
+    document.removeEventListener("click", unlockAudio);
+}
+document.addEventListener("touchstart", unlockAudio, { once: true });
+document.addEventListener("click", unlockAudio, { once: true });
 function playCorrect(){
     const ctx=getCtx(), now=ctx.currentTime;
     [523.25,659.25,783.99].forEach((freq,i)=>{

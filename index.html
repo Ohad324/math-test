@@ -986,17 +986,17 @@ const questions = [
 // Q4
 { topic:"fractions", q:()=>`צמצם: ${f(3,9)}`, options:()=>[f(1,3),f(2,3),f(3,3),f(1,9)], correct:0, correctText:"1/3", explain:()=>simplifyExplain(3,9) },
 // Q5
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,4)} + ${f(1,4)} =</span>`, options:()=>[f(1,2),f(3,5),f(1,4),f(3,8)], correct:0, correctText:"1/2", explain:()=>addSameDenomExplain(1,1,4) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,4)} + ${f(1,4)} =</span>`, options:()=>[f(1,2),f(3,5),f(1,4),f(3,8)], correct:0, correctText:"1/2", explain:()=>addSameDenomExplain(1,1,4) },
 // Q6
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,3)} + ${f(1,3)} =</span>`, options:()=>[f(2,3),f(2,6),f(1,6),f(3,3)], correct:0, correctText:"2/3", explain:()=>addSameDenomExplain(1,1,3) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,3)} + ${f(1,3)} =</span>`, options:()=>[f(2,3),f(2,6),f(1,6),f(3,3)], correct:0, correctText:"2/3", explain:()=>addSameDenomExplain(1,1,3) },
 // Q7
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,5)} + ${f(2,5)} =</span>`, options:()=>[f(3,5),f(3,10),f(2,5),f(1,5)], correct:0, correctText:"3/5", explain:()=>addSameDenomExplain(1,2,5) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,5)} + ${f(2,5)} =</span>`, options:()=>[f(3,5),f(3,10),f(2,5),f(1,5)], correct:0, correctText:"3/5", explain:()=>addSameDenomExplain(1,2,5) },
 // Q8
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(2,7)} + ${f(3,7)} =</span>`, options:()=>[f(5,7),f(5,14),f(6,7),f(1,7)], correct:0, correctText:"5/7", explain:()=>addSameDenomExplain(2,3,7) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(2,7)} + ${f(3,7)} =</span>`, options:()=>[f(5,7),f(5,14),f(6,7),f(1,7)], correct:0, correctText:"5/7", explain:()=>addSameDenomExplain(2,3,7) },
 // Q9
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(4,5)} − ${f(1,5)} =</span>`, options:()=>[f(3,5),f(3,10),f(5,5),f(4,10)], correct:0, correctText:"3/5", explain:()=>subSameDenomExplain(4,1,5) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(4,5)} − ${f(1,5)} =</span>`, options:()=>[f(3,5),f(3,10),f(5,5),f(4,10)], correct:0, correctText:"3/5", explain:()=>subSameDenomExplain(4,1,5) },
 // Q10
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(7,8)} − ${f(3,8)} =</span>`, options:()=>[f(5,6),f(1,2),f(3,8),f(5,8)], correct:1, correctText:"1/2", explain:()=>subSameDenomExplain(7,3,8) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(7,8)} − ${f(3,8)} =</span>`, options:()=>[f(5,6),f(1,2),f(3,8),f(5,8)], correct:1, correctText:"1/2", explain:()=>subSameDenomExplain(7,3,8) },
 // Q11
 { topic:"fractions", q:()=>`הרחב את ${f(1,3)} פי 3`, options:()=>[f(3,9),f(3,12),f(1,9),f(3,3)], correct:0, correctText:"3/9", explain:()=>expandExplain(1,3,3) },
 // Q12
@@ -1018,9 +1018,9 @@ const questions = [
         {value:0.25, label:"¼"}, {value:0.5, label:"²⁄₄"}, {value:0.75, label:"¾"}
     ]})) },
 // Q17
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,6)} + ${f(3,6)} =</span>`, options:()=>[f(4,6),f(5,6),f(4,12),f(3,6)], correct:0, correctText:"4/6", explain:()=>addSameDenomExplain(1,3,6) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,6)} + ${f(3,6)} =</span>`, options:()=>[f(4,6),f(5,6),f(4,12),f(3,6)], correct:0, correctText:"4/6", explain:()=>addSameDenomExplain(1,3,6) },
 // Q18
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(5,6)} − ${f(2,6)} =</span>`, options:()=>[f(3,4),f(1,2),f(2,6),f(4,6)], correct:1, correctText:"1/2", explain:()=>subSameDenomExplain(5,2,6) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(5,6)} − ${f(2,6)} =</span>`, options:()=>[f(3,4),f(1,2),f(2,6),f(4,6)], correct:1, correctText:"1/2", explain:()=>subSameDenomExplain(5,2,6) },
 // Q19
 { topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2 ו-4?`, options:()=>["2","4","6","8"], correct:1, correctText:"4", explain:()=>lcdExplain(2,4) },
 // Q20
@@ -1030,9 +1030,9 @@ const questions = [
 // Q22
 { topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2 ו-3?`, options:()=>["4","5","6","9"], correct:2, correctText:"6", explain:()=>lcdExplain(2,3) },
 // Q23
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − ${f(1,4)} =</span>`, options:()=>[f(3,4),f(1,4),f(2,4),f(4,4)], correct:0, correctText:"3/4", explain:()=>subFromOneExplain(1,4) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">1 − ${f(1,4)} =</span>`, options:()=>[f(3,4),f(1,4),f(2,4),f(4,4)], correct:0, correctText:"3/4", explain:()=>subFromOneExplain(1,4) },
 // Q24
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − ${f(2,3)} =</span>`, options:()=>[f(2,3),f(1,3),f(1,4),f(3,3)], correct:1, correctText:"1/3", explain:()=>subFromOneExplain(2,3) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">1 − ${f(2,3)} =</span>`, options:()=>[f(2,3),f(1,3),f(1,4),f(3,3)], correct:1, correctText:"1/3", explain:()=>subFromOneExplain(2,3) },
 // Q25
 { topic:"fractions", q:()=>`${f(1,3)} = ${f("?",9)}  המונה החסר:`, options:()=>["2","3","4","6"], correct:1, correctText:"3", explain:()=>missingNumExplain(1,3,9) },
 // Q26
@@ -1042,19 +1042,19 @@ const questions = [
 // Q28
 { topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3 ו-4?`, options:()=>["6","8","12","24"], correct:2, correctText:"12", explain:()=>lcdExplain(3,4) },
 // Q29
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,2)} + ${f(1,4)} =</span>`, options:()=>[f(2,6),f(3,4),f(2,4),f(1,4)], correct:1, correctText:"3/4", explain:()=>addDiffDenomExplain(1,2,1,4) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,2)} + ${f(1,4)} =</span>`, options:()=>[f(2,6),f(3,4),f(2,4),f(1,4)], correct:1, correctText:"3/4", explain:()=>addDiffDenomExplain(1,2,1,4) },
 // Q30
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,3)} + ${f(1,6)} =</span>`, options:()=>[f(2,9),f(1,2),f(4,9),f(2,6)], correct:1, correctText:"1/2", explain:()=>addDiffDenomExplain(1,3,1,6) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,3)} + ${f(1,6)} =</span>`, options:()=>[f(2,9),f(1,2),f(4,9),f(2,6)], correct:1, correctText:"1/2", explain:()=>addDiffDenomExplain(1,3,1,6) },
 // Q31
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(3,4)} − ${f(1,2)} =</span>`, options:()=>[f(2,2),f(1,4),f(1,2),f(3,8)], correct:1, correctText:"1/4", explain:()=>subDiffDenomExplain(3,4,1,2) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(3,4)} − ${f(1,2)} =</span>`, options:()=>[f(2,2),f(1,4),f(1,2),f(3,8)], correct:1, correctText:"1/4", explain:()=>subDiffDenomExplain(3,4,1,2) },
 // Q32
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(5,6)} − ${f(1,3)} =</span>`, options:()=>[f(4,3),f(1,2),f(4,6),f(1,3)], correct:1, correctText:"1/2", explain:()=>subDiffDenomExplain(5,6,1,3) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(5,6)} − ${f(1,3)} =</span>`, options:()=>[f(4,3),f(1,2),f(4,6),f(1,3)], correct:1, correctText:"1/2", explain:()=>subDiffDenomExplain(5,6,1,3) },
 // Q33
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,2)} + ${f(1,6)} =</span>`, options:()=>[f(2,8),f(5,6),f(4,6),f(3,8)], correct:2, correctText:"4/6 = 2/3", explain:()=>addDiffDenomExplain(1,2,1,6) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,2)} + ${f(1,6)} =</span>`, options:()=>[f(2,8),f(5,6),f(4,6),f(3,8)], correct:2, correctText:"4/6 = 2/3", explain:()=>addDiffDenomExplain(1,2,1,6) },
 // Q34
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(2,5)} + ${f(1,10)} =</span>`, options:()=>[f(3,15),f(2,3),f(1,2),f(3,10)], correct:2, correctText:"1/2", explain:()=>addDiffDenomExplain(2,5,1,10) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(2,5)} + ${f(1,10)} =</span>`, options:()=>[f(3,15),f(2,3),f(1,2),f(3,10)], correct:2, correctText:"1/2", explain:()=>addDiffDenomExplain(2,5,1,10) },
 // Q35
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(7,10)} − ${f(1,5)} =</span>`, options:()=>[f(6,5),f(1,2),f(3,5),f(3,10)], correct:1, correctText:"1/2", explain:()=>subDiffDenomExplain(7,10,1,5) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(7,10)} − ${f(1,5)} =</span>`, options:()=>[f(6,5),f(1,2),f(3,5),f(3,10)], correct:1, correctText:"1/2", explain:()=>subDiffDenomExplain(7,10,1,5) },
 // Q36
 { topic:"decimals", q:()=>`${f(1,2)} כמספר עשרוני:`, options:()=>["0.2","0.5","0.12","0.05"], correct:1, correctText:"0.5" },
 // Q37
@@ -1081,27 +1081,27 @@ const questions = [
         {value:0.8, label:"⅘"}
     ]})) },
 // Q46
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(3,8)} + ${f(1,4)} =</span>`, options:()=>[f(4,12),f(5,8),f(4,8),f(5,12)], correct:1, correctText:"5/8" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(3,8)} + ${f(1,4)} =</span>`, options:()=>[f(4,12),f(5,8),f(4,8),f(5,12)], correct:1, correctText:"5/8" },
 // Q47
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(7,8)} − ${f(1,4)} =</span>`, options:()=>[f(6,4),f(5,8),f(6,8),f(4,8)], correct:1, correctText:"5/8" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(7,8)} − ${f(1,4)} =</span>`, options:()=>[f(6,4),f(5,8),f(6,8),f(4,8)], correct:1, correctText:"5/8" },
 // Q48
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(3,10)} + ${f(2,5)} =</span>`, options:()=>[f(5,15),f(7,10),f(3,5),f(1,2)], correct:1, correctText:"7/10", explain:()=>addDiffDenomExplain(3,10,2,5) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(3,10)} + ${f(2,5)} =</span>`, options:()=>[f(5,15),f(7,10),f(3,5),f(1,2)], correct:1, correctText:"7/10", explain:()=>addDiffDenomExplain(3,10,2,5) },
 // Q49
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,6)} + ${f(1,4)} =</span>`, options:()=>[f(2,10),f(5,12),f(3,10),f(4,12)], correct:1, correctText:"5/12" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,6)} + ${f(1,4)} =</span>`, options:()=>[f(2,10),f(5,12),f(3,10),f(4,12)], correct:1, correctText:"5/12" },
 // Q50
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(5,6)} − ${f(3,4)} =</span>`, options:()=>[f(2,2),f(1,12),f(3,12),f(7,12)], correct:1, correctText:"1/12" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(5,6)} − ${f(3,4)} =</span>`, options:()=>[f(2,2),f(1,12),f(3,12),f(7,12)], correct:1, correctText:"1/12" },
 // Q51
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,3)} + ${f(1,4)} =</span>`, options:()=>[f(2,7),f(7,12),f(5,12),f(4,12)], correct:1, correctText:"7/12" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,3)} + ${f(1,4)} =</span>`, options:()=>[f(2,7),f(7,12),f(5,12),f(4,12)], correct:1, correctText:"7/12" },
 // Q52
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,4)} + ${f(2,3)} =</span>`, options:()=>[f(3,7),f(11,12),f(9,12),f(3,12)], correct:1, correctText:"11/12" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,4)} + ${f(2,3)} =</span>`, options:()=>[f(3,7),f(11,12),f(9,12),f(3,12)], correct:1, correctText:"11/12" },
 // Q53
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(3,4)} − ${f(1,3)} =</span>`, options:()=>[f(2,1),f(5,12),f(7,12),f(1,4)], correct:1, correctText:"5/12" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(3,4)} − ${f(1,3)} =</span>`, options:()=>[f(2,1),f(5,12),f(7,12),f(1,4)], correct:1, correctText:"5/12" },
 // Q54
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(2,3)} − ${f(1,4)} =</span>`, options:()=>[f(1,7),f(5,12),f(7,12),f(1,3)], correct:1, correctText:"5/12" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(2,3)} − ${f(1,4)} =</span>`, options:()=>[f(1,7),f(5,12),f(7,12),f(1,3)], correct:1, correctText:"5/12" },
 // Q55
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(2,5)} + ${f(1,3)} =</span>`, options:()=>[f(3,8),f(11,15),f(7,15),f(3,15)], correct:1, correctText:"11/15" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(2,5)} + ${f(1,3)} =</span>`, options:()=>[f(3,8),f(11,15),f(7,15),f(3,15)], correct:1, correctText:"11/15" },
 // Q56
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(4,5)} − ${f(1,3)} =</span>`, options:()=>[f(3,2),f(7,15),f(5,15),f(3,15)], correct:1, correctText:"7/15" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(4,5)} − ${f(1,3)} =</span>`, options:()=>[f(3,2),f(7,15),f(5,15),f(3,15)], correct:1, correctText:"7/15" },
 // Q57
 { topic:"fractions", q:()=>`צמצם: ${f(12,16)}`, options:()=>[f(3,4),f(4,5),f(5,8),f(2,3)], correct:0, correctText:"3/4" },
 // Q58
@@ -1109,11 +1109,11 @@ const questions = [
 // Q59
 { topic:"fractions", q:()=>`צמצם: ${f(18,24)}`, options:()=>[f(3,4),f(5,6),f(5,8),f(2,3)], correct:0, correctText:"3/4", explain:()=>simplifyExplain(18,24) },
 // Q60
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(1,1,4)} + ${f(2,4)} =</span>`, options:()=>[m(1,3,4),`2`,m(2,1,4),m(1,2,4)], correct:0, correctText:"1 ו-3/4" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(1,1,4)} + ${f(2,4)} =</span>`, options:()=>[m(1,3,4),`2`,m(2,1,4),m(1,2,4)], correct:0, correctText:"1 ו-3/4" },
 // Q61
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(2,1,3)} + ${f(1,3)} =</span>`, options:()=>[ m(2,2,3), `3`, m(3,1,3), m(2,1,6) ], correct:0, correctText:"2 ו-2/3" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(2,1,3)} + ${f(1,3)} =</span>`, options:()=>[ m(2,2,3), `3`, m(3,1,3), m(2,1,6) ], correct:0, correctText:"2 ו-2/3" },
 // Q62
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(1,3,4)} − ${f(1,4)} =</span>`, options:()=>[ m(2,1,4), m(1,1,2), m(1,1,4), `1` ], correct:1, correctText:"1 ו-1/2", explain:()=>subMixedExplain(1,3,4,0,1,4) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(1,3,4)} − ${f(1,4)} =</span>`, options:()=>[ m(2,1,4), m(1,1,2), m(1,1,4), `1` ], correct:1, correctText:"1 ו-1/2", explain:()=>subMixedExplain(1,3,4,0,1,4) },
 // Q63
 { topic:"numberLine", q:()=>`היכן ממוקם ${m(2,1,2)} על ציר המספרים?`, options:()=>["בין 1 ל-2","בדיוק באמצע בין 2 ל-3","בין 3 ל-4","בין 0 ל-1"], correct:1, correctText:"בין 2 ל-3",
   explain:()=>mkExplain("איך פותרים?",
@@ -1126,13 +1126,13 @@ const questions = [
 // Q66
 { topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 9 ו-6?`, options:()=>["18","27","36","54"], correct:0, correctText:"18", explain:()=>lcdExplain(9,6) },
 // Q67
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(5,6)} + ${f(1,8)} =</span>`, options:()=>[f(6,14),f(23,24),f(13,24),f(6,8)], correct:1, correctText:"23/24" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(5,6)} + ${f(1,8)} =</span>`, options:()=>[f(6,14),f(23,24),f(13,24),f(6,8)], correct:1, correctText:"23/24" },
 // Q68
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(7,9)} − ${f(1,6)} =</span>`, options:()=>[f(6,3),f(11,18),f(13,18),f(5,9)], correct:1, correctText:"11/18" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(7,9)} − ${f(1,6)} =</span>`, options:()=>[f(6,3),f(11,18),f(13,18),f(5,9)], correct:1, correctText:"11/18" },
 // Q69
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(2,9)} + ${f(1,6)} =</span>`, options:()=>[f(3,15),f(7,18),f(5,18),f(4,9)], correct:1, correctText:"7/18" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(2,9)} + ${f(1,6)} =</span>`, options:()=>[f(3,15),f(7,18),f(5,18),f(4,9)], correct:1, correctText:"7/18" },
 // Q70
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(5,6)} − ${f(2,9)} =</span>`, options:()=>[f(3,3),f(11,18),f(7,18),f(1,2)], correct:1, correctText:"11/18" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(5,6)} − ${f(2,9)} =</span>`, options:()=>[f(3,3),f(11,18),f(7,18),f(1,2)], correct:1, correctText:"11/18" },
 // Q71
 { topic:"fractions", q:()=>`המר לשבר מעורב: ${f(7,3)}`, options:()=>[ m(2,1,3), m(3,1,3), m(3,1,7), m(2,2,3) ], correct:0, correctText:"2 ו-1/3", explain:()=>improperToMixedExplain(7,3) },
 // Q72
@@ -1142,57 +1142,57 @@ const questions = [
 // Q74
 { topic:"fractions", q:()=>`המר לשבר לא אמיתי: ${m(2,2,3)}`, options:()=>[f(8,3),f(6,3),f(4,3),f(7,3)], correct:0, correctText:"8/3" },
 // Q75
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(1,1,2)} + ${m(1,1,3)} =</span>`, options:()=>[ m(2,5,6), m(2,2,5), `3`, m(3,1,6) ], correct:0, correctText:"2 ו-5/6" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(1,1,2)} + ${m(1,1,3)} =</span>`, options:()=>[ m(2,5,6), m(2,2,5), `3`, m(3,1,6) ], correct:0, correctText:"2 ו-5/6" },
 // Q76
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(2,3,4)} + ${m(1,1,4)} =</span>`, options:()=>[ `4`, m(3,1,4), m(4,1,4), m(3,1,2) ], correct:0, correctText:"4", explain:()=>addMixedExplain(2,3,4,1,1,4) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(2,3,4)} + ${m(1,1,4)} =</span>`, options:()=>[ `4`, m(3,1,4), m(4,1,4), m(3,1,2) ], correct:0, correctText:"4", explain:()=>addMixedExplain(2,3,4,1,1,4) },
 // Q77
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(3,1,2)} − ${m(1,1,4)} =</span>`, options:()=>[ m(2,1,4), m(2,3,4), m(2,1,2), m(2,1,6) ], correct:0, correctText:"2 ו-1/4" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(3,1,2)} − ${m(1,1,4)} =</span>`, options:()=>[ m(2,1,4), m(2,3,4), m(2,1,2), m(2,1,6) ], correct:0, correctText:"2 ו-1/4" },
 // Q78
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(4,2,3)} − ${m(2,1,3)} =</span>`, options:()=>[ m(2,1,3), m(2,2,3), `2`, m(3,1,3) ], correct:0, correctText:"2 ו-1/3" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(4,2,3)} − ${m(2,1,3)} =</span>`, options:()=>[ m(2,1,3), m(2,2,3), `2`, m(3,1,3) ], correct:0, correctText:"2 ו-1/3" },
 // Q79
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(3,8)} + ${f(5,6)} =</span>`, options:()=>[f(8,14),f(29,24),f(19,24),f(8,24)], correct:1, correctText:"29/24" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(3,8)} + ${f(5,6)} =</span>`, options:()=>[f(8,14),f(29,24),f(19,24),f(8,24)], correct:1, correctText:"29/24" },
 // Q80
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(2,1,4)} − ${f(3,4)} =</span>`, options:()=>[ m(1,1,3), m(1,1,2), m(1,3,4), m(2,1,2) ], correct:1, correctText:"1 ו-1/2", explain:()=>subMixedExplain(2,1,4,0,3,4) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(2,1,4)} − ${f(3,4)} =</span>`, options:()=>[ m(1,1,3), m(1,1,2), m(1,3,4), m(2,1,2) ], correct:1, correctText:"1 ו-1/2", explain:()=>subMixedExplain(2,1,4,0,3,4) },
 // Q81
 { topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 2, 3 ו-4?`, options:()=>["6","8","12","24"], correct:2, correctText:"12", explain:()=>lcdExplain(2,3,4) },
 // Q82
 { topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 3, 4 ו-6?`, options:()=>["12","18","24","36"], correct:0, correctText:"12", explain:()=>lcdExplain(3,4,6) },
 // Q83
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,2)} + ${f(1,3)} + ${f(1,6)} =</span>`, options:()=>["1",f(3,11),f(1,2),f(5,6)], correct:0, correctText:"1" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,2)} + ${f(1,3)} + ${f(1,6)} =</span>`, options:()=>["1",f(3,11),f(1,2),f(5,6)], correct:0, correctText:"1" },
 // Q84
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,4)} + ${f(1,3)} + ${f(1,6)} =</span>`, options:()=>[f(3,13),f(7,12),f(3,4),f(11,12)], correct:2, correctText:"3/4", explain:()=>addThreeExplain(1,4,1,3,1,6) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,4)} + ${f(1,3)} + ${f(1,6)} =</span>`, options:()=>[f(3,13),f(7,12),f(3,4),f(11,12)], correct:2, correctText:"3/4", explain:()=>addThreeExplain(1,4,1,3,1,6) },
 // Q85
 { topic:"fractions", q:()=>`המר לשבר לא אמיתי: ${m(4,3,5)}`, options:()=>[f(23,5),f(19,5),f(22,5),f(20,5)], correct:0, correctText:"23/5" },
 // Q86
 { topic:"fractions", q:()=>`המר לשבר מעורב: ${f(17,6)}`, options:()=>[ m(2,5,6), m(3,1,6), m(2,4,6), m(3,5,6) ], correct:0, correctText:"2 ו-5/6" },
 // Q87
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(7,12)} + ${f(5,8)} =</span>`, options:()=>[f(12,20),f(29,24),f(12,24),f(19,24)], correct:1, correctText:"29/24" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(7,12)} + ${f(5,8)} =</span>`, options:()=>[f(12,20),f(29,24),f(12,24),f(19,24)], correct:1, correctText:"29/24" },
 // Q88
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(11,12)} − ${f(3,8)} =</span>`, options:()=>[f(8,4),f(13,24),f(8,12),f(5,12)], correct:1, correctText:"13/24" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(11,12)} − ${f(3,8)} =</span>`, options:()=>[f(8,4),f(13,24),f(8,12),f(5,12)], correct:1, correctText:"13/24" },
 // Q89 — word problem
 { topic:"add", q:()=>`דנה אכלה ${f(1,4)} מהפיצה ויוסי אכל ${f(3,8)}. כמה אכלו יחד?`, options:()=>[f(4,12),f(5,8),f(4,8),f(2,8)], correct:1, correctText:"5/8" },
 // Q90 — word problem
 { topic:"sub", q:()=>`היה ${f(7,8)} ק"ג קמח. השתמשו ב-${f(1,4)} ק"ג. כמה נשאר?`, options:()=>[f(6,4),f(5,8),f(6,8),f(3,8)], correct:1, correctText:"5/8" },
 // Q91
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(2,5,6)} + ${m(1,3,4)} =</span>`, options:()=>[ m(4,7,12), m(3,8,10), m(4,1,2), m(5,7,12) ], correct:0, correctText:"4 ו-7/12" },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(2,5,6)} + ${m(1,3,4)} =</span>`, options:()=>[ m(4,7,12), m(3,8,10), m(4,1,2), m(5,7,12) ], correct:0, correctText:"4 ו-7/12" },
 // Q92
 { topic:"add", q:()=>`הוסף: ${m(1,2,3)} + ${m(2,3,4)} =`, options:()=>[ m(4,5,12), m(3,5,7), m(3,1,2), m(4,7,12) ], correct:0, correctText:"4 ו-5/12" },
 // Q93 — borrowing
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(5,1,6)} − ${m(2,5,6)} =</span>`, options:()=>[ m(3,1,6), m(2,1,3), m(3,2,6), m(2,4,6) ], correct:1, correctText:"2 ו-1/3", explain:()=>subMixedExplain(5,1,6,2,5,6) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(5,1,6)} − ${m(2,5,6)} =</span>`, options:()=>[ m(3,1,6), m(2,1,3), m(3,2,6), m(2,4,6) ], correct:1, correctText:"2 ו-1/3", explain:()=>subMixedExplain(5,1,6,2,5,6) },
 // Q94 — borrowing
-{ topic:"sub", q:()=>`${m(6,1,5)} − ${m(3,4,5)} =`, options:()=>[ m(2,2,5), m(3,2,5), m(2,3,5), m(3,3,5) ], correct:0, correctText:"2 ו-2/5" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(6,1,5)} − ${m(3,4,5)} =</span>`, options:()=>[ m(2,2,5), m(3,2,5), m(2,3,5), m(3,3,5) ], correct:0, correctText:"2 ו-2/5", explain:()=>subMixedExplain(6,1,5,3,4,5) },
 // Q95 — borrowing
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(3,1,4)} − ${m(1,3,4)} =</span>`, options:()=>[ m(1,1,3), m(1,1,2), m(2,1,2), m(1,3,4) ], correct:1, correctText:"1 ו-1/2", explain:()=>subMixedExplain(3,1,4,1,3,4) },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(3,1,4)} − ${m(1,3,4)} =</span>`, options:()=>[ m(1,1,3), m(1,1,2), m(2,1,2), m(1,3,4) ], correct:1, correctText:"1 ו-1/2", explain:()=>subMixedExplain(3,1,4,1,3,4) },
 // Q96 — borrowing
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(4,1,3)} − ${m(2,2,3)} =</span>`, options:()=>[ m(1,2,3), m(2,1,3), m(2,2,3), m(1,1,3) ], correct:0, correctText:"1 ו-2/3" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(4,1,3)} − ${m(2,2,3)} =</span>`, options:()=>[ m(1,2,3), m(2,1,3), m(2,2,3), m(1,1,3) ], correct:0, correctText:"1 ו-2/3" },
 // Q97
 { topic:"lcd", q:()=>`מהו המכנה המשותף הקטן של 6, 9 ו-12?`, options:()=>["18","24","36","72"], correct:2, correctText:"36", explain:()=>lcdExplain(6,9,12) },
 // Q98
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${f(1,6)} + ${f(2,9)} + ${f(1,12)} =</span>`, options:()=>[f(4,27),f(17,36),f(4,9),f(7,18)], correct:1, correctText:"17/36", explain:()=>addThreeExplain(1,6,2,9,1,12) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${f(1,6)} + ${f(2,9)} + ${f(1,12)} =</span>`, options:()=>[f(4,27),f(17,36),f(4,9),f(7,18)], correct:1, correctText:"17/36", explain:()=>addThreeExplain(1,6,2,9,1,12) },
 // Q99
-{ topic:"sub", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 3 − ${m(1,5,8)} =</span>`, options:()=>[ m(1,3,8), m(2,3,8), m(1,5,8), m(2,5,8) ], correct:0, correctText:"1 ו-3/8" },
+{ topic:"sub", q:()=>`חשב: <span dir="ltr" style="display:inline-block">3 − ${m(1,5,8)} =</span>`, options:()=>[ m(1,3,8), m(2,3,8), m(1,5,8), m(2,5,8) ], correct:0, correctText:"1 ו-3/8" },
 // Q100
-{ topic:"add", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: ${m(3,7,10)} + ${m(2,4,15)} =</span>`, options:()=>[ m(6,1,30), m(5,11,15), m(6,1,6), m(5,29,30) ], correct:3, correctText:"5 ו-29/30", explain:()=>addMixedExplain(3,7,10,2,4,15) },
+{ topic:"add", q:()=>`חשב: <span dir="ltr" style="display:inline-block">${m(3,7,10)} + ${m(2,4,15)} =</span>`, options:()=>[ m(6,1,30), m(5,11,15), m(6,1,6), m(5,29,30) ], correct:3, correctText:"5 ו-29/30", explain:()=>addMixedExplain(3,7,10,2,4,15) },
 
 // ══════════════════════════════════════════════════════════════════
 // GROUP K (Q101-110): Decimals — reading & place value
@@ -1246,73 +1246,73 @@ const questions = [
 // GROUP M (Q121-130): Decimals — addition
 // ══════════════════════════════════════════════════════════════════
 // Q121
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.3 + 0.4 =</span>`, options:()=>["0.7","0.07","7","0.34"], correct:0, correctText:"0.7", explain:()=>addDecimalsExplain("0.3","0.4") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.3 + 0.4 =</span>`, options:()=>["0.7","0.07","7","0.34"], correct:0, correctText:"0.7", explain:()=>addDecimalsExplain("0.3","0.4") },
 // Q122
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.5 + 0.5 =</span>`, options:()=>["0.10","1.0","0.55","1.5"], correct:1, correctText:"1.0", explain:()=>addDecimalsExplain("0.5","0.5") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.5 + 0.5 =</span>`, options:()=>["0.10","1.0","0.55","1.5"], correct:1, correctText:"1.0", explain:()=>addDecimalsExplain("0.5","0.5") },
 // Q123
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.7 + 0.2 =</span>`, options:()=>["0.9","0.09","0.72","9"], correct:0, correctText:"0.9", explain:()=>addDecimalsExplain("0.7","0.2") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.7 + 0.2 =</span>`, options:()=>["0.9","0.09","0.72","9"], correct:0, correctText:"0.9", explain:()=>addDecimalsExplain("0.7","0.2") },
 // Q124
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.25 + 0.25 =</span>`, options:()=>["0.5","0.2525","0.05","0.4"], correct:0, correctText:"0.5", explain:()=>addDecimalsExplain("0.25","0.25") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.25 + 0.25 =</span>`, options:()=>["0.5","0.2525","0.05","0.4"], correct:0, correctText:"0.5", explain:()=>addDecimalsExplain("0.25","0.25") },
 // Q125
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.6 + 0.4 =</span>`, options:()=>["0.10","1.0","1.10","0.64"], correct:1, correctText:"1.0", explain:()=>addDecimalsExplain("0.6","0.4") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.6 + 0.4 =</span>`, options:()=>["0.10","1.0","1.10","0.64"], correct:1, correctText:"1.0", explain:()=>addDecimalsExplain("0.6","0.4") },
 // Q126
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1.5 + 0.5 =</span>`, options:()=>["1.55","2.0","2.5","1.10"], correct:1, correctText:"2.0", explain:()=>addDecimalsExplain("1.5","0.5") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">1.5 + 0.5 =</span>`, options:()=>["1.55","2.0","2.5","1.10"], correct:1, correctText:"2.0", explain:()=>addDecimalsExplain("1.5","0.5") },
 // Q127
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.15 + 0.05 =</span>`, options:()=>["0.2","0.02","0.1505","0.10"], correct:0, correctText:"0.2", explain:()=>addDecimalsExplain("0.15","0.05") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.15 + 0.05 =</span>`, options:()=>["0.2","0.02","0.1505","0.10"], correct:0, correctText:"0.2", explain:()=>addDecimalsExplain("0.15","0.05") },
 // Q128
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.8 + 0.7 =</span>`, options:()=>["1.5","0.15","0.87","1.05"], correct:0, correctText:"1.5", explain:()=>addDecimalsExplain("0.8","0.7") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.8 + 0.7 =</span>`, options:()=>["1.5","0.15","0.87","1.05"], correct:0, correctText:"1.5", explain:()=>addDecimalsExplain("0.8","0.7") },
 // Q129
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.3 + 0.45 =</span>`, options:()=>["0.75","0.48","0.345","0.075"], correct:0, correctText:"0.75", explain:()=>addDecimalsExplain("0.3","0.45") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.3 + 0.45 =</span>`, options:()=>["0.75","0.48","0.345","0.075"], correct:0, correctText:"0.75", explain:()=>addDecimalsExplain("0.3","0.45") },
 // Q130
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 2.5 + 1.5 =</span>`, options:()=>["3.5","4.0","4.10","3.10"], correct:1, correctText:"4.0", explain:()=>addDecimalsExplain("2.5","1.5") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">2.5 + 1.5 =</span>`, options:()=>["3.5","4.0","4.10","3.10"], correct:1, correctText:"4.0", explain:()=>addDecimalsExplain("2.5","1.5") },
 
 // ══════════════════════════════════════════════════════════════════
 // GROUP N (Q131-140): Decimals — subtraction
 // ══════════════════════════════════════════════════════════════════
 // Q131
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.8 − 0.3 =</span>`, options:()=>["0.5","0.05","5","0.6"], correct:0, correctText:"0.5", explain:()=>subDecimalsExplain("0.8","0.3") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.8 − 0.3 =</span>`, options:()=>["0.5","0.05","1.1","0.6"], correct:0, correctText:"0.5", explain:()=>subDecimalsExplain("0.8","0.3") },
 // Q132
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − 0.5 =</span>`, options:()=>["0.5","0.05","1.5","0.95"], correct:0, correctText:"0.5", explain:()=>subDecimalsExplain("1","0.5") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">1 − 0.5 =</span>`, options:()=>["0.5","0.05","1.5","0.95"], correct:0, correctText:"0.5", explain:()=>subDecimalsExplain("1","0.5") },
 // Q133
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − 0.25 =</span>`, options:()=>["0.75","0.025","1.25","0.85"], correct:0, correctText:"0.75", explain:()=>subDecimalsExplain("1","0.25") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">1 − 0.25 =</span>`, options:()=>["0.75","0.025","1.25","0.85"], correct:0, correctText:"0.75", explain:()=>subDecimalsExplain("1","0.25") },
 // Q134
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.7 − 0.4 =</span>`, options:()=>["0.3","0.03","3","0.11"], correct:0, correctText:"0.3", explain:()=>subDecimalsExplain("0.7","0.4") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.7 − 0.4 =</span>`, options:()=>["0.3","0.03","3","0.11"], correct:0, correctText:"0.3", explain:()=>subDecimalsExplain("0.7","0.4") },
 // Q135
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.9 − 0.45 =</span>`, options:()=>["0.45","0.5","0.045","0.55"], correct:0, correctText:"0.45", explain:()=>subDecimalsExplain("0.9","0.45") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.9 − 0.45 =</span>`, options:()=>["0.45","0.5","0.045","0.55"], correct:0, correctText:"0.45", explain:()=>subDecimalsExplain("0.9","0.45") },
 // Q136
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1.5 − 0.5 =</span>`, options:()=>["1","2","1.10","0.10"], correct:0, correctText:"1", explain:()=>subDecimalsExplain("1.5","0.5") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">1.5 − 0.5 =</span>`, options:()=>["1","2","1.10","0.10"], correct:0, correctText:"1", explain:()=>subDecimalsExplain("1.5","0.5") },
 // Q137
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 2 − 0.3 =</span>`, options:()=>["1.7","2.3","1.97","0.7"], correct:0, correctText:"1.7", explain:()=>subDecimalsExplain("2","0.3") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">2 − 0.3 =</span>`, options:()=>["1.7","2.3","1.97","0.7"], correct:0, correctText:"1.7", explain:()=>subDecimalsExplain("2","0.3") },
 // Q138
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.5 − 0.25 =</span>`, options:()=>["0.25","0.3","0.025","0.225"], correct:0, correctText:"0.25", explain:()=>subDecimalsExplain("0.5","0.25") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.5 − 0.25 =</span>`, options:()=>["0.25","0.3","0.025","0.225"], correct:0, correctText:"0.25", explain:()=>subDecimalsExplain("0.5","0.25") },
 // Q139
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 1 − 0.99 =</span>`, options:()=>["0.01","0.1","0.99","0.001"], correct:0, correctText:"0.01", explain:()=>subDecimalsExplain("1","0.99") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">1 − 0.99 =</span>`, options:()=>["0.01","0.1","0.99","0.001"], correct:0, correctText:"0.01", explain:()=>subDecimalsExplain("1","0.99") },
 // Q140
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 3.5 − 1.2 =</span>`, options:()=>["2.3","4.7","2.7","1.3"], correct:0, correctText:"2.3", explain:()=>subDecimalsExplain("3.5","1.2") },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">3.5 − 1.2 =</span>`, options:()=>["2.3","4.7","2.7","1.3"], correct:0, correctText:"2.3", explain:()=>subDecimalsExplain("3.5","1.2") },
 
 // ══════════════════════════════════════════════════════════════════
 // GROUP O (Q141-150): Decimals — multiply/divide by 10/100/1000 + round
 // ══════════════════════════════════════════════════════════════════
 // Q141
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.5 × 10 =</span>`, options:()=>["5","50","0.05","0.5"], correct:0, correctText:"5", explain:()=>multByPow10Explain("0.5",10) },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.5 × 10 =</span>`, options:()=>["5","50","0.05","0.5"], correct:0, correctText:"5", explain:()=>multByPow10Explain("0.5",10) },
 // Q142
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.05 × 10 =</span>`, options:()=>["0.5","5","0.005","50"], correct:0, correctText:"0.5", explain:()=>multByPow10Explain("0.05",10) },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.05 × 10 =</span>`, options:()=>["0.5","5","0.005","50"], correct:0, correctText:"0.5", explain:()=>multByPow10Explain("0.05",10) },
 // Q143
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.3 × 100 =</span>`, options:()=>["30","3","300","0.003"], correct:0, correctText:"30", explain:()=>multByPow10Explain("0.3",100) },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.3 × 100 =</span>`, options:()=>["30","3","300","0.003"], correct:0, correctText:"30", explain:()=>multByPow10Explain("0.3",100) },
 // Q144
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 5 ÷ 10 =</span>`, options:()=>["0.5","50","0.05","5"], correct:0, correctText:"0.5", explain:()=>divByPow10Explain("5",10) },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">5 ÷ 10 =</span>`, options:()=>["0.5","50","0.05","5"], correct:0, correctText:"0.5", explain:()=>divByPow10Explain("5",10) },
 // Q145
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 25 ÷ 100 =</span>`, options:()=>["0.25","2.5","0.025","250"], correct:0, correctText:"0.25", explain:()=>divByPow10Explain("25",100) },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">25 ÷ 100 =</span>`, options:()=>["0.25","2.5","0.025","250"], correct:0, correctText:"0.25", explain:()=>divByPow10Explain("25",100) },
 // Q146
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.7 × 10 =</span>`, options:()=>["7","70","0.07","0.7"], correct:0, correctText:"7", explain:()=>multByPow10Explain("0.7",10) },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.7 × 10 =</span>`, options:()=>["7","70","0.07","0.7"], correct:0, correctText:"7", explain:()=>multByPow10Explain("0.7",10) },
 // Q147
 { topic:"decimals", q:()=>`עגל לעשירית הקרובה: 0.46`, options:()=>["0.5","0.4","0.46","1"], correct:0, correctText:"0.5", explain:()=>roundDecimalExplain("0.46","עשירית") },
 // Q148
 { topic:"decimals", q:()=>`עגל לעשירית הקרובה: 0.34`, options:()=>["0.3","0.4","0.34","0"], correct:0, correctText:"0.3", explain:()=>roundDecimalExplain("0.34","עשירית") },
 // Q149
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 0.123 × 100 =</span>`, options:()=>["12.3","1.23","123","0.0123"], correct:0, correctText:"12.3", explain:()=>multByPow10Explain("0.123",100) },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">0.123 × 100 =</span>`, options:()=>["12.3","1.23","123","0.0123"], correct:0, correctText:"12.3", explain:()=>multByPow10Explain("0.123",100) },
 // Q150
-{ topic:"decimals", q:()=>`<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">חשב: 250 ÷ 100 =</span>`, options:()=>["2.5","25","0.25","250"], correct:0, correctText:"2.5", explain:()=>divByPow10Explain("250",100) },
+{ topic:"decimals", q:()=>`חשב: <span dir="ltr" style="display:inline-block">250 ÷ 100 =</span>`, options:()=>["2.5","25","0.25","250"], correct:0, correctText:"2.5", explain:()=>divByPow10Explain("250",100) },
 
 // ══════════════════════════════════════════════════════════════════
 // GROUP P (Q151-160): Geometry — shapes and angles basics

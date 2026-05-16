@@ -313,24 +313,41 @@ const PARENT_PHONE = "972542584032";
 // ntfy.sh push notification topic — keep this secret-ish; anyone with the name can subscribe
 const NTFY_TOPIC   = "ohad-math-3xj9k7q2v8t5";
 
-// Identify which device/child sent the notification — prompt once, store locally
+// Identify which device/child sent the notification — only stored if user explicitly enters it
 function getPlayerName(){
-    let name = localStorage.getItem("mt_player");
-    if (!name) {
-        name = (prompt("מה שמך? (ישמר במכשיר זה לזיהוי בהתראות)") || "").trim();
-        if (!name) name = "לא ידוע";
-        localStorage.setItem("mt_player", name);
-    }
+    const name = (localStorage.getItem("mt_player") || "").trim();
+    // Treat legacy placeholder "לא ידוע" as unset
+    if (!name || name === "לא ידוע") return "";
     return name;
 }
 function renderPlayerTag(){
-    const el = document.getElementById("player-name");
-    if (el) el.textContent = getPlayerName();
+    const tag = document.getElementById("player-tag");
+    const nameEl = document.getElementById("player-name");
+    const btn = document.getElementById("player-change");
+    if (!tag || !nameEl || !btn) return;
+    const name = getPlayerName();
+    if (name) {
+        tag.firstChild.nodeValue = "שחקן: ";
+        nameEl.textContent = name;
+        nameEl.style.display = "";
+        btn.textContent = "שנה";
+    } else {
+        tag.firstChild.nodeValue = "";
+        nameEl.textContent = "";
+        nameEl.style.display = "none";
+        btn.textContent = "👤 הזן שם";
+    }
 }
 function changePlayerName(){
-    const cur  = localStorage.getItem("mt_player") || "";
-    const next = (prompt("שם חדש:", cur) || "").trim();
-    if (next) { localStorage.setItem("mt_player", next); renderPlayerTag(); }
+    const cur  = getPlayerName();
+    const next = (prompt("שם:", cur) || "").trim();
+    if (next) {
+        localStorage.setItem("mt_player", next);
+    } else if (next === "") {
+        // User cleared the field — remove the stored name
+        localStorage.removeItem("mt_player");
+    }
+    renderPlayerTag();
 }
 
 // Convert math HTML (with .frac / .mixed spans) to a plain-text exercise string
@@ -703,7 +720,7 @@ function advanceGroup(){
     highestGroupReached = Math.max(highestGroupReached, currentGroupIdx);
     reshuffleCurrentGroup();
     // Notify parent of group advance
-    const player = getPlayerName();
+    const player = getPlayerName() || "אנונימי";
     fetch("https://ntfy.sh/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -793,7 +810,7 @@ function selectOption(selectedIdx, selectedBtn){
     allBtns.forEach((b,i)=>{ b.disabled=true; if(!isRight && i!==selectedIdx) b.classList.add("dimmed"); });
 
     // Auto push notification via ntfy.sh — fire-and-forget
-    const player = getPlayerName();
+    const player = getPlayerName() || "אנונימי";
     const qPlain = plainText(q.q());
     const LET    = ["א","ב","ג","ד"];
     const opts   = q.options().map((o,i) => {
@@ -866,7 +883,7 @@ function endSession(timeUp){
     document.getElementById("final-time").textContent    = fmtTime(timeUsed);
 
     document.getElementById("final-whatsapp-btn").onclick = () => {
-        const player = getPlayerName();
+        const player = getPlayerName() || "אנונימי";
         const msg = encodeURIComponent(
             `היי אבא! 👋\nסיימתי תרגול חשבון 📐\n\n` +
             `שחקן: ${player}\n` +
@@ -881,7 +898,7 @@ function endSession(timeUp){
     };
 
     // Auto-notify dad via ntfy too
-    const player = getPlayerName();
+    const player = getPlayerName() || "אנונימי";
     fetch("https://ntfy.sh/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -1836,9 +1836,10 @@ function selectOption(selectedIdx, selectedBtn){
             explainHtml: explainHtml
         });
     }
-    // Update progress bar after streak change
-    const pct = ((currentGroupIdx + streak / STREAK_TARGET) / GROUP_NAMES.length) * 100;
-    progressBar.style.width = `${pct}%`;
+    // Update progress bar based on group progress
+    const _perGroup = questionsPerGroup(currentGroupIdx);
+    const _pct = ((currentGroupIdx + Math.min(groupShownCount, _perGroup) / _perGroup) / GROUP_NAMES.length) * 100;
+    progressBar.style.width = `${_pct}%`;
 
     allBtns.forEach((b,i)=>{ b.disabled=true; if(!isRight && i!==selectedIdx) b.classList.add("dimmed"); });
 

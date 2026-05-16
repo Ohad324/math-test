@@ -303,9 +303,9 @@
     <div class="timer-display" id="timer-display" style="display:none">⏱ 10:00</div>
     <div class="player-tag" id="player-tag">שחקן: <span id="player-name">…</span> <button id="player-change" type="button">שנה</button></div>
     <div id="lives-display">
-        <span class="life" data-i="0">❤️</span>
-        <span class="life" data-i="1">❤️</span>
-        <span class="life" data-i="2">❤️</span>
+        <span class="life" data-i="0">🥷</span>
+        <span class="life" data-i="1">🥷</span>
+        <span class="life" data-i="2">🥷</span>
     </div>
     <div id="score-display">⭐ <span id="score-value">0</span></div>
 </div>
@@ -1716,8 +1716,8 @@ function selectOption(selectedIdx, selectedBtn){
         feedbackIcon.textContent = "❌";
         const livesLeft = Math.max(lives, 0);
         feedbackText.textContent = livesLeft > 0
-            ? `לא נכון. נשארו לך ${livesLeft} ${livesLeft === 1 ? "חיים" : "חיים"} ❤️`
-            : `אבדו כל החיים — סוף משחק 💔`;
+            ? `לא נכון. נשארו לך ${livesLeft} ${livesLeft === 1 ? "לוחם" : "לוחמים"} 🥷`
+            : `נפלו כל הלוחמים — סוף משחק ⚔️`;
         playWrong();
         scoreText.textContent = `✓ ${correctCount}  ✗ ${wrongCount}`;
         // Show step-by-step explanation if this question has one
@@ -1818,7 +1818,7 @@ function endSession(reason){
 
     let emoji, title, sub;
     if (won)        { emoji = "🏆"; title = `ניצחת! 🎉`; sub = `הגעת ל-${score} נקודות!`; }
-    else if (livesOut) { emoji = "💔"; title = "סוף משחק"; sub = `אבדו כל ${LIVES_TOTAL} החיים`; }
+    else if (livesOut) { emoji = "⚔️"; title = "סוף משחק"; sub = `נפלו כל ${LIVES_TOTAL} הלוחמים`; }
     else if (timeUp)   { emoji = "⏰"; title = "נגמר הזמן!"; sub = `הגעת לקבוצה ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})`; }
     else { emoji = "✅"; title = "סיימת את כל הקבוצות!"; sub = `הגעת לקבוצה ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})`; }
 
@@ -1834,7 +1834,7 @@ function endSession(reason){
     // Render mistakes review
     renderMistakesReview();
 
-    const endReason = won ? "🏆 ניצחתי! (הגעתי ל-100 נק')" : livesOut ? "💔 סוף משחק (אבדו החיים)" : timeUp ? "⏰ נגמר הזמן" : "✅ סיימתי את כל הקבוצות";
+    const endReason = won ? "🏆 ניצחתי! (הגעתי ל-100 נק')" : livesOut ? "⚔️ סוף משחק (נפלו הלוחמים)" : timeUp ? "⏰ נגמר הזמן" : "✅ סיימתי את כל הקבוצות";
 
     // Big win celebration: blast confetti over the whole screen
     if (won) {
@@ -1879,7 +1879,7 @@ function endSession(reason){
             topic:   NTFY_TOPIC,
             title:   `Math · ${player} · סיום`,
             message: `${endReason}\n⭐ ניקוד: ${score} נק'\nקבוצה: ${groupReached} (${highestGroupReached+1}/${GROUP_NAMES.length})\nנכון: ${correctCount} · טעויות: ${wrongCount} · דיוק: ${accuracy}%\nזמן: ${fmtTime(timeUsed)}`,
-            tags:    [livesOut ? "broken_heart" : timeUp ? "alarm_clock" : "checkered_flag"]
+            tags:    [livesOut ? "crossed_swords" : timeUp ? "alarm_clock" : "checkered_flag"]
         })
     }).catch(() => {});
 }

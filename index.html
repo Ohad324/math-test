@@ -1030,7 +1030,7 @@ const TOPICS = {
 
 // ── All 100 questions ordered by ascending difficulty (Q1 easiest, Q100 hardest)
 // Each: { topic, q:()=>html, options:()=>[html,...], correct:idx, correctText:string }
-const questions = [
+const allQuestions = [
 
 // Q1
 { topic:"fractions", q:()=>`צמצם: ${f(2,4)}`, options:()=>[f(1,2),f(2,2),f(1,4),f(3,4)], correct:0, correctText:"1/2", explain:()=>simplifyExplain(2,4) },
@@ -1445,16 +1445,36 @@ const questions = [
 
 ]; // end questions
 
+// ── Game mode: ?mode=decimals → only decimal questions (40), 8 groups of 5 ──
+const GAME_MODE = (new URLSearchParams(location.search).get("mode") || "all");
+const IS_DECIMAL_MODE = (GAME_MODE === "decimals");
+const questions = IS_DECIMAL_MODE
+    ? allQuestions.filter(q => q.topic === "decimals").slice(0, 40)
+    : allQuestions;
+if (IS_DECIMAL_MODE) {
+    // Update header to reflect the mode
+    document.addEventListener("DOMContentLoaded", () => {
+        const titleEl = document.querySelector(".header-title");
+        if (titleEl) titleEl.textContent = "🔢 אימון מספרים עשרוניים";
+        document.title = "אימון עשרוניים";
+    });
+}
+
 // ── State ─────────────────────────────────────────────────────────
 const TOTAL          = questions.length;   // 100
 const SESSION_SEC    = 0;                  // 0 = no time limit (timer removed)
-const GROUP_SIZE     = 10;                 // 10 questions per group → 10 groups (A–J)
+const GROUP_SIZE     = IS_DECIMAL_MODE ? 5 : 10;  // 5 q/group (40 total) for decimals mode, else 10
 // Distribute 33 questions across 18 groups so the child sees ALL groups
 // before reaching the 99-point win threshold (33 × 3 pts each).
 // 3 groups get 1 question (A, G, M — every 6th), 15 groups get 2 → total 33.
-function questionsPerGroup(groupIdx){ return (groupIdx % 6 === 0) ? 1 : 2; }
+function questionsPerGroup(groupIdx){
+    if (IS_DECIMAL_MODE) return 2;                       // 2 q/group × 8 groups = 16 questions visible (out of 40)
+    return (groupIdx % 6 === 0) ? 1 : 2;                 // full mode: 33 questions across 18 groups
+}
 const CORRECT_PAUSE  = 800;                // ms to show ✓ feedback before auto-advance
-const GROUP_NAMES    = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R"];
+const GROUP_NAMES    = IS_DECIMAL_MODE
+    ? ["1","2","3","4","5","6","7","8"]
+    : ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R"];
 
 let currentQIdx       = 0;     // question index currently shown
 let currentGroupIdx   = 0;     // 0-based group index (0=A, 9=J)
@@ -1469,7 +1489,7 @@ let currentShuffledOpts    = [];  // displayed options for the current question 
 let currentShuffledCorrect = 0;   // index of correct option AFTER shuffle
 const LIVES_TOTAL     = 3;
 const POINTS_PER_CORRECT = 3;
-const WIN_SCORE       = 99;                // 33 correct × 3 pts = 99 → reach to win
+const WIN_SCORE       = IS_DECIMAL_MODE ? 48 : 99; // decimals: 16 q × 3 = 48 (perfect run); full: 99 (33 correct)
 let lives             = LIVES_TOTAL;
 let score             = 0;
 let mistakes          = []; // [{ qIdx, qHtml, chosenHtml, correctHtml, correctText, explainHtml }]
@@ -1953,15 +1973,15 @@ function endSession(reason){
     if (localStorage.getItem('mt_admin') !== '1') return;
 
     document.body.classList.add('admin-mode');
-    const SECTIONS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
+    const SECTIONS = GROUP_NAMES;
     const host = document.getElementById('adm-sections');
     SECTIONS.forEach((name, sIdx) => {
         const sec = document.createElement('div');
         sec.className = 'adm-section';
-        sec.innerHTML = `<div class="adm-section-h">קבוצה ${name} &nbsp;<span style="opacity:0.6;font-weight:400">(${sIdx*10+1}–${(sIdx+1)*10})</span></div><div class="adm-grid"></div>`;
+        sec.innerHTML = `<div class="adm-section-h">קבוצה ${name} &nbsp;<span style="opacity:0.6;font-weight:400">(${sIdx*GROUP_SIZE+1}–${(sIdx+1)*GROUP_SIZE})</span></div><div class="adm-grid"></div>`;
         const grid = sec.querySelector('.adm-grid');
-        for (let i = 0; i < 10; i++) {
-            const qIdx = sIdx * 10 + i;
+        for (let i = 0; i < GROUP_SIZE; i++) {
+            const qIdx = sIdx * GROUP_SIZE + i;
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'adm-btn';

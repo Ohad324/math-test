@@ -1445,18 +1445,76 @@ const allQuestions = [
 
 ]; // end questions
 
-// ── Game mode: ?mode=decimals → only decimal questions (40), 8 groups of 5 ──
+// ── Game mode: ?mode=decimals → focused 40-question set on tenths/hundredths/thousandths ──
 const GAME_MODE = (new URLSearchParams(location.search).get("mode") || "all");
 const IS_DECIMAL_MODE = (GAME_MODE === "decimals");
-const questions = IS_DECIMAL_MODE
-    ? allQuestions.filter(q => q.topic === "decimals").slice(0, 40)
-    : allQuestions;
+
+// 40 questions strictly about 0.1, 0.01, 0.001 and related concepts (8 groups × 5)
+const decimalPlaceValueQuestions = [
+    // ── Group 1: עשיריות (0.1 / 1/10) ─────────────────────────────
+    { topic:"decimals", q:()=>`0.1 כשבר:`, options:()=>[f(1,10),f(1,100),f(1,1000),f(10,1)], correct:0, correctText:"1/10", explain:()=>decimalToFractionExplain("0.1",1,10) },
+    { topic:"decimals", q:()=>`${f(1,10)} כעשרוני:`, options:()=>["0.01","0.1","0.001","1.0"], correct:1, correctText:"0.1", explain:()=>fracToDecimalExplain(1,10) },
+    { topic:"decimals", q:()=>`כמה עשיריות יש ב-0.3?`, options:()=>["3","30","0.3","13"], correct:0, correctText:"3", explain:()=>placeValueExplain("0.3","עשיריות","3") },
+    { topic:"decimals", q:()=>`כמה עשיריות יש ב-0.5?`, options:()=>["50","0.5","5","15"], correct:2, correctText:"5", explain:()=>placeValueExplain("0.5","עשיריות","5") },
+    { topic:"decimals", q:()=>`${f(7,10)} כעשרוני:`, options:()=>["0.7","0.07","7.0","0.007"], correct:0, correctText:"0.7", explain:()=>fracToDecimalExplain(7,10) },
+
+    // ── Group 2: מאיות (0.01 / 1/100) ─────────────────────────────
+    { topic:"decimals", q:()=>`0.01 כשבר:`, options:()=>[f(1,10),f(1,100),f(1,1000),f(10,100)], correct:1, correctText:"1/100", explain:()=>decimalToFractionExplain("0.01",1,100) },
+    { topic:"decimals", q:()=>`${f(1,100)} כעשרוני:`, options:()=>["0.1","0.01","0.001","0.10"], correct:1, correctText:"0.01", explain:()=>fracToDecimalExplain(1,100) },
+    { topic:"decimals", q:()=>`כמה מאיות יש ב-0.05?`, options:()=>["50","0.5","5","0.05"], correct:2, correctText:"5", explain:()=>placeValueExplain("0.05","מאיות","5") },
+    { topic:"decimals", q:()=>`כמה מאיות יש ב-0.23?`, options:()=>["2","3","23","230"], correct:2, correctText:"23", explain:()=>mkExplain("כמה מאיות?", step(`כל ספרה אחרי הנקודה: ראשונה=עשיריות, שנייה=מאיות.`) + step(`0.23 = 2 עשיריות + 3 מאיות. בסך הכל: 20 + 3 = <b>23 מאיות</b>.`)) },
+    { topic:"decimals", q:()=>`${f(47,100)} כעשרוני:`, options:()=>["0.47","4.7","0.047","47.0"], correct:0, correctText:"0.47", explain:()=>fracToDecimalExplain(47,100) },
+
+    // ── Group 3: אלפיות (0.001 / 1/1000) ──────────────────────────
+    { topic:"decimals", q:()=>`0.001 כשבר:`, options:()=>[f(1,100),f(1,10),f(1,1000),f(1,10000)], correct:2, correctText:"1/1000", explain:()=>decimalToFractionExplain("0.001",1,1000) },
+    { topic:"decimals", q:()=>`${f(1,1000)} כעשרוני:`, options:()=>["0.01","0.001","0.1","0.0001"], correct:1, correctText:"0.001", explain:()=>fracToDecimalExplain(1,1000) },
+    { topic:"decimals", q:()=>`כמה אלפיות יש ב-0.005?`, options:()=>["5","50","0.005","500"], correct:0, correctText:"5", explain:()=>placeValueExplain("0.005","אלפיות","5") },
+    { topic:"decimals", q:()=>`${f(125,1000)} כעשרוני:`, options:()=>["1.25","0.125","0.0125","12.5"], correct:1, correctText:"0.125", explain:()=>fracToDecimalExplain(125,1000) },
+    { topic:"decimals", q:()=>`0.007 כשבר:`, options:()=>[f(7,10),f(7,100),f(7,1000),f(7,10000)], correct:2, correctText:"7/1000", explain:()=>decimalToFractionExplain("0.007",7,1000) },
+
+    // ── Group 4: השוואה בין דרגות (10ths vs 100ths vs 1000ths) ────
+    { topic:"decimals", q:()=>`מה גדול: 0.1 או 0.01?`, options:()=>["0.1","0.01","שווים","אי אפשר לדעת"], correct:0, correctText:"0.1", explain:()=>compareDecimalsExplain("0.1","0.01") },
+    { topic:"decimals", q:()=>`מה גדול: 0.5 או 0.05?`, options:()=>["0.05","0.5","שווים","תלוי"], correct:1, correctText:"0.5", explain:()=>compareDecimalsExplain("0.5","0.05") },
+    { topic:"decimals", q:()=>`מה גדול: 0.01 או 0.001?`, options:()=>["0.001","0.01","שווים","תלוי"], correct:1, correctText:"0.01", explain:()=>compareDecimalsExplain("0.01","0.001") },
+    { topic:"decimals", q:()=>`איך קשורים 0.3 ו-0.30?`, options:()=>["0.3 גדול","0.30 גדול","שווים","אחר"], correct:2, correctText:"שווים", explain:()=>compareDecimalsExplain("0.3","0.30") },
+    { topic:"decimals", q:()=>`מה גדול: 0.07 או 0.1?`, options:()=>["0.07","0.1","שווים","תלוי"], correct:1, correctText:"0.1", explain:()=>compareDecimalsExplain("0.1","0.07") },
+
+    // ── Group 5: זיהוי ערך מקום בעשרוני ──────────────────────────
+    { topic:"decimals", q:()=>`בעשרוני 0.348 — ספרת המאיות:`, options:()=>["3","4","8","0"], correct:1, correctText:"4", explain:()=>placeValueExplain("0.348","מאיות","4") },
+    { topic:"decimals", q:()=>`בעשרוני 0.5 — ספרת העשיריות:`, options:()=>["0","5","50","1"], correct:1, correctText:"5", explain:()=>placeValueExplain("0.5","עשיריות","5") },
+    { topic:"decimals", q:()=>`בעשרוני 0.072 — ספרת המאיות:`, options:()=>["0","7","2","72"], correct:1, correctText:"7", explain:()=>placeValueExplain("0.072","מאיות","7") },
+    { topic:"decimals", q:()=>`בעשרוני 0.029 — ספרת האלפיות:`, options:()=>["0","2","9","29"], correct:2, correctText:"9", explain:()=>placeValueExplain("0.029","אלפיות","9") },
+    { topic:"decimals", q:()=>`בעשרוני 0.156 — ספרת העשיריות:`, options:()=>["1","5","6","15"], correct:0, correctText:"1", explain:()=>placeValueExplain("0.156","עשיריות","1") },
+
+    // ── Group 6: צורות שוות (10/100/1000) ────────────────────────
+    { topic:"decimals", q:()=>`האם 0.3 = 0.30 = 0.300?`, options:()=>["כן, כולם שווים","לא, 0.300 גדול","לא, 0.3 גדול","אי אפשר לדעת"], correct:0, correctText:"כן", explain:()=>mkExplain("אפסים נגררים", step(`אפסים בסוף עשרוני <b>לא משנים את הערך</b>.`) + step(`0.3 = 0.30 = 0.300 — כל המספרים שווים.`)) },
+    { topic:"decimals", q:()=>`0.5 = כמה מאיות?`, options:()=>["5","50","500","0.05"], correct:1, correctText:"50", explain:()=>mkExplain("המרה לדרגה אחרת", step(`0.5 = 0.50 = 50 מאיות.`) + step(`טריק: 0.5 × 100 = <b>50</b>.`)) },
+    { topic:"decimals", q:()=>`0.04 = כמה אלפיות?`, options:()=>["4","40","400","0.04"], correct:1, correctText:"40", explain:()=>mkExplain("המרה לאלפיות", step(`0.04 = 0.040 = 40 אלפיות.`) + step(`טריק: 0.04 × 1000 = <b>40</b>.`)) },
+    { topic:"decimals", q:()=>`0.2 = כמה עשיריות?`, options:()=>["20","0.2","2","12"], correct:2, correctText:"2", explain:()=>placeValueExplain("0.2","עשיריות","2") },
+    { topic:"decimals", q:()=>`0.1 = כמה מאיות?`, options:()=>["1","10","100","0.01"], correct:1, correctText:"10", explain:()=>mkExplain("עשירית = 10 מאיות", step(`עשירית אחת מתחלקת ל-10 מאיות.`) + step(`0.1 = 0.10 = <b>10</b> מאיות.`)) },
+
+    // ── Group 7: כפל ב-10/100/1000 (הזזת נקודה ימינה) ────────────
+    { topic:"decimals", q:()=>`חשב: 0.1 × 10 =`, options:()=>["1","10","0.01","0.1"], correct:0, correctText:"1", explain:()=>multByPow10Explain("0.1",10) },
+    { topic:"decimals", q:()=>`חשב: 0.01 × 100 =`, options:()=>["1","10","0.1","100"], correct:0, correctText:"1", explain:()=>multByPow10Explain("0.01",100) },
+    { topic:"decimals", q:()=>`חשב: 0.001 × 1000 =`, options:()=>["1","10","100","0.001"], correct:0, correctText:"1", explain:()=>multByPow10Explain("0.001",1000) },
+    { topic:"decimals", q:()=>`חשב: 0.05 × 10 =`, options:()=>["5","0.5","0.005","50"], correct:1, correctText:"0.5", explain:()=>multByPow10Explain("0.05",10) },
+    { topic:"decimals", q:()=>`חשב: 0.3 × 100 =`, options:()=>["3","30","300","0.003"], correct:1, correctText:"30", explain:()=>multByPow10Explain("0.3",100) },
+
+    // ── Group 8: חילוק ב-10/100/1000 (הזזת נקודה שמאלה) ──────────
+    { topic:"decimals", q:()=>`חשב: 1 ÷ 10 =`, options:()=>["0.1","0.01","10","1.1"], correct:0, correctText:"0.1", explain:()=>divByPow10Explain("1",10) },
+    { topic:"decimals", q:()=>`חשב: 1 ÷ 100 =`, options:()=>["0.1","0.01","0.001","100"], correct:1, correctText:"0.01", explain:()=>divByPow10Explain("1",100) },
+    { topic:"decimals", q:()=>`חשב: 1 ÷ 1000 =`, options:()=>["0.01","0.001","0.0001","1000"], correct:1, correctText:"0.001", explain:()=>divByPow10Explain("1",1000) },
+    { topic:"decimals", q:()=>`חשב: 5 ÷ 10 =`, options:()=>["0.5","50","5","0.05"], correct:0, correctText:"0.5", explain:()=>divByPow10Explain("5",10) },
+    { topic:"decimals", q:()=>`חשב: 25 ÷ 100 =`, options:()=>["2.5","0.25","0.025","250"], correct:1, correctText:"0.25", explain:()=>divByPow10Explain("25",100) }
+];
+
+const questions = IS_DECIMAL_MODE ? decimalPlaceValueQuestions : allQuestions;
 if (IS_DECIMAL_MODE) {
     // Update header to reflect the mode
     document.addEventListener("DOMContentLoaded", () => {
         const titleEl = document.querySelector(".header-title");
-        if (titleEl) titleEl.textContent = "🔢 אימון מספרים עשרוניים";
-        document.title = "אימון עשרוניים";
+        if (titleEl) titleEl.textContent = "🔢 עשיריות, מאיות, אלפיות";
+        document.title = "אימון 0.1 / 0.01 / 0.001";
     });
 }
 

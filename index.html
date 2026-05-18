@@ -1022,6 +1022,7 @@ const TOPICS = {
     numberLine:  { label:"ציר המספרים",          badge:"topic-number-line" },
     decimals:    { label:"מספרים עשרוניים",      badge:"topic-decimals" },
     geometry:    { label:"גאומטריה",              badge:"topic-geometry" },
+    grade4:      { label:"חשבון יסודי",           badge:"topic-decimals" },
 };
 
 // ── All 100 questions ordered by ascending difficulty (Q1 easiest, Q100 hardest)
@@ -1444,10 +1445,12 @@ const allQuestions = [
 // ── Game mode (URL ?mode=…) ───────────────────────────────────────
 //   default        → all 180 questions, 3 lives, 1-2 q/group, win at 99
 //   ?mode=decimals → 40 focused questions on 0.1/0.01/0.001
-//   ?mode=long     → all 180 questions, 5 lives, 5 q/group, no early win (plays through all 90)
+//   ?mode=long     → all 180 questions, 5 lives, 5 q/group, no early win
+//   ?mode=grade4   → 40 grade-4 questions (+, −, ×, ÷ with whole numbers)
 const GAME_MODE = (new URLSearchParams(location.search).get("mode") || "all");
 const IS_DECIMAL_MODE = (GAME_MODE === "decimals");
 const IS_LONG_MODE    = (GAME_MODE === "long");
+const IS_GRADE4_MODE  = (GAME_MODE === "grade4");
 
 // 40 questions strictly about 0.1, 0.01, 0.001 and related concepts (8 groups × 5)
 const decimalPlaceValueQuestions = [
@@ -1508,34 +1511,116 @@ const decimalPlaceValueQuestions = [
     { topic:"decimals", q:()=>`חשב: 25 ÷ 100 =`, options:()=>["2.5","0.25","0.025","250"], correct:1, correctText:"0.25", explain:()=>divByPow10Explain("25",100) }
 ];
 
-const questions = IS_DECIMAL_MODE ? decimalPlaceValueQuestions : allQuestions;
-if (IS_DECIMAL_MODE || IS_LONG_MODE) {
+// ── Grade-4 helpers + 40 question set (whole-number +, −, ×, ÷) ──
+function gradeAddExplain(a,b){
+    return mkExplain("חיבור", step(`מחברים את שני המספרים:`) + eqLine(`${a} + ${b} = <span class="exp-answer">${a+b}</span>`));
+}
+function gradeSubExplain(a,b){
+    return mkExplain("חיסור", step(`מחסרים את הקטן מהגדול:`) + eqLine(`${a} − ${b} = <span class="exp-answer">${a-b}</span>`));
+}
+function gradeMulExplain(a,b){
+    return mkExplain("כפל", step(`מכפילים: ${a} פעמים ${b}.`) + eqLine(`${a} × ${b} = <span class="exp-answer">${a*b}</span>`) + step(`טיפ: ${a} × ${b} = ${b} × ${a}`));
+}
+function gradeDivExplain(a,b){
+    return mkExplain("חילוק", step(`מחלקים את ${a} ל-${b} קבוצות שוות.`) + eqLine(`${a} ÷ ${b} = <span class="exp-answer">${a/b}</span>`) + step(`בדיקה: ${b} × ${a/b} = ${a} ✓`));
+}
+function g4Q(op, a, b){
+    const opTxt = {"+":"+", "-":"−", "*":"×", "/":"÷"}[op];
+    const res = {"+":a+b, "-":a-b, "*":a*b, "/":a/b}[op];
+    const expl = {"+":gradeAddExplain, "-":gradeSubExplain, "*":gradeMulExplain, "/":gradeDivExplain}[op];
+    // Pick 3 plausible distractors near the correct answer (avoid duplicates)
+    const offsets = [-1, 1, 10, -10, 2, -2, 5, -5];
+    const distractors = new Set();
+    for (const off of offsets) {
+        const v = res + off;
+        if (v >= 0 && v !== res && distractors.size < 3) distractors.add(v);
+    }
+    const opts = [String(res), ...Array.from(distractors).map(String)];
+    return {
+        topic: "grade4",
+        q: () => `חשב: <span dir="ltr" style="display:inline-block">${a} ${opTxt} ${b} =</span>`,
+        options: () => opts,
+        correct: 0,
+        correctText: String(res),
+        explain: () => expl(a, b)
+    };
+}
+function sqPerimExplain(side){
+    return mkExplain("היקף ריבוע", step(`בריבוע יש 4 צלעות שוות.`) + eqLine(`היקף = 4 × ${side} = <span class="exp-answer">${4*side}</span>`));
+}
+function rectPerimExplain(w,h){
+    return mkExplain("היקף מלבן", step(`למלבן יש 2 זוגות של צלעות שוות.`) + eqLine(`היקף = 2 × (${w} + ${h}) = 2 × ${w+h} = <span class="exp-answer">${2*(w+h)}</span>`));
+}
+function sqAreaExplain(side){
+    return mkExplain("שטח ריבוע", step(`שטח ריבוע = צלע × צלע.`) + eqLine(`${side} × ${side} = <span class="exp-answer">${side*side}</span>`));
+}
+function g4Geo(type, ...args){
+    // type: "sqp" = square perim, "rp" = rect perim, "sqa" = square area
+    let q, res, expl;
+    if (type === "sqp")      { const s = args[0]; res = 4*s; q = `מה היקף ריבוע שאורך צלעו ${s} ס"מ?`; expl = () => sqPerimExplain(s); }
+    else if (type === "rp")  { const [w,h] = args; res = 2*(w+h); q = `מה היקף מלבן בצלעות ${w} ו-${h} ס"מ?`; expl = () => rectPerimExplain(w,h); }
+    else                     { const s = args[0]; res = s*s; q = `מה שטח ריבוע שאורך צלעו ${s} ס"מ?`; expl = () => sqAreaExplain(s); }
+    const offsets = [-1, 1, 2, -2, 4, -4, 10, -10, 5, -5];
+    const distractors = new Set();
+    for (const off of offsets) { const v = res + off; if (v > 0 && v !== res && distractors.size < 3) distractors.add(v); }
+    return { topic:"grade4", q:()=>q, options:()=>[String(res), ...Array.from(distractors).map(String)], correct:0, correctText:String(res), explain:expl };
+}
+const grade4Questions = [
+    // Group 1: חיבור (10)
+    g4Q("+", 8, 8),   g4Q("+", 17, 23), g4Q("+", 45, 35), g4Q("+", 56, 24), g4Q("+", 39, 41),
+    g4Q("+", 28, 47), g4Q("+", 19, 31), g4Q("+", 64, 26), g4Q("+", 38, 52), g4Q("+", 47, 33),
+    // Group 2: חיסור (10)
+    g4Q("-", 36, 16), g4Q("-", 50, 25), g4Q("-", 80, 35), g4Q("-", 73, 28), g4Q("-", 100, 47),
+    g4Q("-", 62, 19), g4Q("-", 90, 45), g4Q("-", 85, 27), g4Q("-", 70, 34), g4Q("-", 95, 48),
+    // Group 3: כפל (10)
+    g4Q("*", 6, 7),  g4Q("*", 8, 9),  g4Q("*", 5, 12), g4Q("*", 7, 8),  g4Q("*", 9, 6),
+    g4Q("*", 4, 15), g4Q("*", 8, 8),  g4Q("*", 7, 7),  g4Q("*", 6, 9),  g4Q("*", 11, 5),
+    // Group 4: חילוק (10)
+    g4Q("/", 20, 2), g4Q("/", 40, 4), g4Q("/", 48, 6), g4Q("/", 63, 9), g4Q("/", 56, 7),
+    g4Q("/", 81, 9), g4Q("/", 72, 8), g4Q("/", 36, 4), g4Q("/", 100, 10), g4Q("/", 64, 8),
+    // Group 5: ריבוע — היקף (5) + שטח (5)
+    g4Geo("sqp", 5),  g4Geo("sqp", 8),  g4Geo("sqp", 12), g4Geo("sqp", 7),  g4Geo("sqp", 10),
+    g4Geo("sqa", 3),  g4Geo("sqa", 5),  g4Geo("sqa", 7),  g4Geo("sqa", 8),  g4Geo("sqa", 10),
+    // Group 6: מלבן — היקף (10)
+    g4Geo("rp", 4, 6), g4Geo("rp", 5, 8),  g4Geo("rp", 3, 7), g4Geo("rp", 6, 9),  g4Geo("rp", 7, 10),
+    g4Geo("rp", 8, 12), g4Geo("rp", 4, 9), g4Geo("rp", 5, 11), g4Geo("rp", 6, 8), g4Geo("rp", 9, 11)
+];
+
+const questions = IS_DECIMAL_MODE ? decimalPlaceValueQuestions
+                : IS_GRADE4_MODE  ? grade4Questions
+                : allQuestions;
+if (IS_DECIMAL_MODE || IS_LONG_MODE || IS_GRADE4_MODE) {
     document.addEventListener("DOMContentLoaded", () => {
         const titleEl = document.querySelector(".header-title");
         if (titleEl) {
             if (IS_DECIMAL_MODE) titleEl.textContent = "🔢 עשיריות, מאיות, אלפיות";
             else if (IS_LONG_MODE) titleEl.textContent = "🔢 חשבון – גרסה ארוכה";
+            else if (IS_GRADE4_MODE) titleEl.textContent = "🔢 חשבון כיתה ד'";
         }
         if (IS_DECIMAL_MODE) document.title = "אימון 0.1 / 0.01 / 0.001";
         if (IS_LONG_MODE)    document.title = "חשבון – גרסה ארוכה";
+        if (IS_GRADE4_MODE)  document.title = "חשבון כיתה ד'";
     });
 }
 
 // ── State ─────────────────────────────────────────────────────────
 const TOTAL          = questions.length;   // 100
 const SESSION_SEC    = 0;                  // 0 = no time limit (timer removed)
-const GROUP_SIZE     = IS_DECIMAL_MODE ? 5 : 10;  // pool size per group (40 total for decimals, 180 otherwise)
+const GROUP_SIZE     = IS_DECIMAL_MODE ? 5 : 10;  // pool size per group (decimals: 5/group → 40 total; others: 10)
 // Distribute 33 questions across 18 groups so the child sees ALL groups
 // before reaching the 99-point win threshold (33 × 3 pts each).
 // 3 groups get 1 question (A, G, M — every 6th), 15 groups get 2 → total 33.
 function questionsPerGroup(groupIdx){
     if (IS_LONG_MODE)    return 5;                       // long mode: 5 q × 18 groups = 90 questions
+    if (IS_GRADE4_MODE)  return 3;                       // grade-4: 3 q × 6 groups = 18 visible (out of 60)
     if (IS_DECIMAL_MODE) return 2;                       // 2 q/group × 8 groups = 16 questions visible (out of 40)
     return (groupIdx % 6 === 0) ? 1 : 2;                 // full mode: 33 questions across 18 groups
 }
 const CORRECT_PAUSE  = 800;                // ms to show ✓ feedback before auto-advance
 const GROUP_NAMES    = IS_DECIMAL_MODE
     ? ["1","2","3","4","5","6","7","8"]
+    : IS_GRADE4_MODE
+    ? ["חיבור","חיסור","כפל","חילוק","ריבוע","מלבן"]
     : ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R"];
 
 let currentQIdx       = 0;     // question index currently shown
@@ -1551,7 +1636,7 @@ let currentShuffledOpts    = [];  // displayed options for the current question 
 let currentShuffledCorrect = 0;   // index of correct option AFTER shuffle
 const LIVES_TOTAL     = IS_LONG_MODE ? 5 : 3;
 const POINTS_PER_CORRECT = 3;
-const WIN_SCORE       = IS_LONG_MODE ? 99999 : (IS_DECIMAL_MODE ? 48 : 99); // long: no early win — play through all groups
+const WIN_SCORE       = IS_LONG_MODE ? 99999 : (IS_GRADE4_MODE ? 54 : (IS_DECIMAL_MODE ? 48 : 99)); // grade4: 18×3=54 (perfect)
 let lives             = LIVES_TOTAL;
 let score             = 0;
 let mistakes          = []; // [{ qIdx, qHtml, chosenHtml, correctHtml, correctText, explainHtml }]

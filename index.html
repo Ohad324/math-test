@@ -1565,6 +1565,21 @@ function g4Geo(type, ...args){
     for (const off of offsets) { const v = res + off; if (v > 0 && v !== res && distractors.size < 3) distractors.add(v); }
     return { topic:"grade4", q:()=>q, options:()=>[String(res), ...Array.from(distractors).map(String)], correct:0, correctText:String(res), explain:expl };
 }
+// Word problems: helper that takes a question text, the correct answer, and explain steps
+function g4Word(qText, ans, explainSteps){
+    const offsets = [-5, 5, 10, -10, 1, -1, 20, -20, 2, -2, 50, -50];
+    const distractors = new Set();
+    for (const off of offsets) { const v = ans + off; if (v > 0 && v !== ans && distractors.size < 3) distractors.add(v); }
+    return {
+        topic:"grade4",
+        q: () => qText,
+        options: () => [String(ans), ...Array.from(distractors).map(String)],
+        correct: 0,
+        correctText: String(ans),
+        explain: () => mkExplain("פתרון", explainSteps.map(s => step(s)).join("") + eqLine(`<span class="exp-answer">${ans}</span>`))
+    };
+}
+
 const grade4Questions = [
     // Group 1: חיבור (10)
     g4Q("+", 8, 8),   g4Q("+", 17, 23), g4Q("+", 45, 35), g4Q("+", 56, 24), g4Q("+", 39, 41),
@@ -1583,7 +1598,58 @@ const grade4Questions = [
     g4Geo("sqa", 3),  g4Geo("sqa", 5),  g4Geo("sqa", 7),  g4Geo("sqa", 8),  g4Geo("sqa", 10),
     // Group 6: מלבן — היקף (10)
     g4Geo("rp", 4, 6), g4Geo("rp", 5, 8),  g4Geo("rp", 3, 7), g4Geo("rp", 6, 9),  g4Geo("rp", 7, 10),
-    g4Geo("rp", 8, 12), g4Geo("rp", 4, 9), g4Geo("rp", 5, 11), g4Geo("rp", 6, 8), g4Geo("rp", 9, 11)
+    g4Geo("rp", 8, 12), g4Geo("rp", 4, 9), g4Geo("rp", 5, 11), g4Geo("rp", 6, 8), g4Geo("rp", 9, 11),
+    // Group 7: בעיות מילוליות (10)
+    g4Word(
+        `דני קנה 3 עוגות שוקולד, 2 חלות ו-5 לחמניות. עוגה עולה 35 ש"ח, חלה ולחמנייה עולות 20 ש"ח כל אחת. כמה שילם דני בסה"כ?`,
+        245,
+        [`3 עוגות × 35 = 105 ש"ח`, `2 חלות × 20 = 40 ש"ח`, `5 לחמניות × 20 = 100 ש"ח`, `סה"כ: 105 + 40 + 100 = 245 ש"ח`]
+    ),
+    g4Word(
+        `רינה קנתה 4 ספרים ב-15 ש"ח כל אחד ו-2 עפרונות ב-5 ש"ח. כמה שילמה בסה"כ?`,
+        70,
+        [`4 ספרים × 15 = 60 ש"ח`, `2 עפרונות × 5 = 10 ש"ח`, `סה"כ: 60 + 10 = 70 ש"ח`]
+    ),
+    g4Word(
+        `יוסי קנה 5 גלידות ב-8 ש"ח ו-3 משקאות ב-6 ש"ח. כמה שילם?`,
+        58,
+        [`5 × 8 = 40`, `3 × 6 = 18`, `סה"כ: 40 + 18 = 58 ש"ח`]
+    ),
+    g4Word(
+        `שרה קנתה 6 בקבוקי מים ב-4 ש"ח כל אחד ושילמה במאית של 50 ש"ח. כמה עודף קיבלה?`,
+        26,
+        [`6 × 4 = 24 ש"ח שילמה`, `50 − 24 = 26 ש"ח עודף`]
+    ),
+    g4Word(
+        `תמר קנתה 8 פרחים ב-12 ש"ח ו-3 כרטיסי ברכה ב-4 ש"ח. כמה שילמה?`,
+        108,
+        [`8 × 12 = 96 ש"ח`, `3 × 4 = 12 ש"ח`, `סה"כ: 96 + 12 = 108 ש"ח`]
+    ),
+    g4Word(
+        `בכיתה יש 4 שורות, ובכל שורה 6 ילדים. כמה ילדים בכיתה?`,
+        24,
+        [`4 שורות × 6 ילדים = 24 ילדים`]
+    ),
+    g4Word(
+        `אבא קנה 5 חבילות עפרונות, בכל חבילה 8 עפרונות. כמה עפרונות יש בסה"כ?`,
+        40,
+        [`5 חבילות × 8 עפרונות = 40 עפרונות`]
+    ),
+    g4Word(
+        `6 חברים מתחלקים ב-48 ממתקים בשווה. כמה ממתקים יקבל כל אחד?`,
+        8,
+        [`48 ÷ 6 = 8 ממתקים לכל אחד`]
+    ),
+    g4Word(
+        `בכיתה 30 ילדים, חולקים ל-5 קבוצות שוות. כמה ילדים בכל קבוצה?`,
+        6,
+        [`30 ÷ 5 = 6 ילדים בכל קבוצה`]
+    ),
+    g4Word(
+        `מחיר כיסא 25 ש"ח. אמא קנתה 4 כיסאות וקיבלה הנחה של 10 ש"ח. כמה שילמה?`,
+        90,
+        [`4 × 25 = 100 ש"ח (לפני ההנחה)`, `100 − 10 = 90 ש"ח (אחרי הנחה)`]
+    )
 ];
 
 const questions = IS_DECIMAL_MODE ? decimalPlaceValueQuestions
@@ -1612,7 +1678,7 @@ const GROUP_SIZE     = IS_DECIMAL_MODE ? 5 : 10;  // pool size per group (decima
 // 3 groups get 1 question (A, G, M — every 6th), 15 groups get 2 → total 33.
 function questionsPerGroup(groupIdx){
     if (IS_LONG_MODE)    return 5;                       // long mode: 5 q × 18 groups = 90 questions
-    if (IS_GRADE4_MODE)  return 3;                       // grade-4: 3 q × 6 groups = 18 visible (out of 60)
+    if (IS_GRADE4_MODE)  return 3;                       // grade-4: 3 q × 7 groups = 21 visible (out of 70)
     if (IS_DECIMAL_MODE) return 2;                       // 2 q/group × 8 groups = 16 questions visible (out of 40)
     return (groupIdx % 6 === 0) ? 1 : 2;                 // full mode: 33 questions across 18 groups
 }
@@ -1620,7 +1686,7 @@ const CORRECT_PAUSE  = 800;                // ms to show ✓ feedback before aut
 const GROUP_NAMES    = IS_DECIMAL_MODE
     ? ["1","2","3","4","5","6","7","8"]
     : IS_GRADE4_MODE
-    ? ["חיבור","חיסור","כפל","חילוק","ריבוע","מלבן"]
+    ? ["חיבור","חיסור","כפל","חילוק","ריבוע","מלבן","סיפור"]
     : ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R"];
 
 let currentQIdx       = 0;     // question index currently shown
@@ -1636,7 +1702,7 @@ let currentShuffledOpts    = [];  // displayed options for the current question 
 let currentShuffledCorrect = 0;   // index of correct option AFTER shuffle
 const LIVES_TOTAL     = IS_LONG_MODE ? 5 : 3;
 const POINTS_PER_CORRECT = 3;
-const WIN_SCORE       = IS_LONG_MODE ? 99999 : (IS_GRADE4_MODE ? 54 : (IS_DECIMAL_MODE ? 48 : 99)); // grade4: 18×3=54 (perfect)
+const WIN_SCORE       = IS_LONG_MODE ? 99999 : (IS_GRADE4_MODE ? 63 : (IS_DECIMAL_MODE ? 48 : 99)); // grade4: 21×3=63 (perfect)
 let lives             = LIVES_TOTAL;
 let score             = 0;
 let mistakes          = []; // [{ qIdx, qHtml, chosenHtml, correctHtml, correctText, explainHtml }]

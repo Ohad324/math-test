@@ -424,7 +424,7 @@
 <div class="footer">בהצלחה! לומדים חשבון בכיף 📐</div>
 
 <script>
-const PARENT_PHONE = "972542584032";
+const PARENT_PHONES = ["972542584032", "972528510261"];   // WhatsApp goes to both numbers
 // ntfy.sh push notification topic — keep this secret-ish; anyone with the name can subscribe
 const NTFY_TOPIC   = "ohad-math-3xj9k7q2v8t5";
 
@@ -2173,7 +2173,10 @@ function endSession(reason){
             `דיוק: *${accuracy}%*\n` +
             `זמן: *${fmtTime(timeUsed)}*`
         );
-        window.open(`https://wa.me/${PARENT_PHONE}?text=${msg}`, '_blank');
+        // Open WhatsApp for each parent phone (slight delay so popup blockers don't suppress the 2nd)
+        PARENT_PHONES.forEach((phone, i) => {
+            setTimeout(() => window.open(`https://wa.me/${phone}?text=${msg}`, '_blank'), i * 350);
+        });
     };
 
     // Auto-notify dad via ntfy too

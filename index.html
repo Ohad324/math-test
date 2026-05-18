@@ -311,6 +311,7 @@
         <div class="pp-buttons">
             <button type="button" class="pp-option" data-name="אורי">אורי</button>
             <button type="button" class="pp-option" data-name="עומר">עומר</button>
+            <button type="button" class="pp-option" data-name="יונתן">יונתן</button>
             <button type="button" class="pp-option" data-name="__other__">או הקלד שם…</button>
         </div>
         <div class="pp-other" id="pp-other-wrap" style="display:none">
@@ -1700,7 +1701,14 @@ let highestGroupReached = 0;   // 0-based — for end-of-session reporting
 let answered          = false;
 let currentShuffledOpts    = [];  // displayed options for the current question (shuffled)
 let currentShuffledCorrect = 0;   // index of correct option AFTER shuffle
-const LIVES_TOTAL     = IS_LONG_MODE ? 5 : 3;
+// Per-player lives override (יונתן gets 5 פסילות). LIVES_TOTAL is recomputed when picker closes.
+const PLAYER_LIVES_OVERRIDE = { "יונתן": 5 };
+let LIVES_TOTAL = IS_LONG_MODE ? 5 : 3;
+function refreshLivesTotal(){
+    const playerName = getPlayerName();
+    const override = PLAYER_LIVES_OVERRIDE[playerName];
+    LIVES_TOTAL = override != null ? override : (IS_LONG_MODE ? 5 : 3);
+}
 const POINTS_PER_CORRECT = 3;
 const WIN_SCORE       = IS_LONG_MODE ? 99999 : (IS_GRADE4_MODE ? 63 : (IS_DECIMAL_MODE ? 48 : 99)); // grade4: 21×3=63 (perfect)
 let lives             = LIVES_TOTAL;
@@ -1777,6 +1785,8 @@ function renderMistakesReview(){
 // Restart: reset state and start a fresh session (after picking player)
 function restartSession(){
     showPlayerPicker(() => {
+        refreshLivesTotal();
+        buildLivesDisplay();
         finalContainer.classList.remove("show");
         quizContainer.style.display = "";
         progressArea.style.display  = "";
@@ -2255,10 +2265,10 @@ window.onload = function(){
     document.getElementById("player-change").addEventListener("click", changePlayerName);
     document.getElementById("restart-btn").addEventListener("click", restartSession);
 
-    // Build the lives row to match LIVES_TOTAL (3 or 5)
-    buildLivesDisplay();
-    // Show player picker before starting the game
+    // Show player picker before starting the game (lives count depends on chosen player)
     showPlayerPicker(() => {
+        refreshLivesTotal();
+        buildLivesDisplay();
         initSession();
         currentQIdx = pickNext();
         if (currentQIdx === undefined || currentQIdx === null) return;

@@ -331,11 +331,7 @@
     <div class="header-title">🔢 חשבון כיתה ה'</div>
     <div class="timer-display" id="timer-display" style="display:none">⏱ 10:00</div>
     <div class="player-tag" id="player-tag">שחקן: <span id="player-name">…</span> <button id="player-change" type="button">שנה</button></div>
-    <div id="lives-display">
-        <span class="life" data-i="0">🥷</span>
-        <span class="life" data-i="1">🥷</span>
-        <span class="life" data-i="2">🥷</span>
-    </div>
+    <div id="lives-display"></div>
     <div id="score-display">⭐ <span id="score-value">0</span></div>
 </div>
 
@@ -1445,9 +1441,13 @@ const allQuestions = [
 
 ]; // end questions
 
-// ── Game mode: ?mode=decimals → focused 40-question set on tenths/hundredths/thousandths ──
+// ── Game mode (URL ?mode=…) ───────────────────────────────────────
+//   default        → all 180 questions, 3 lives, 1-2 q/group, win at 99
+//   ?mode=decimals → 40 focused questions on 0.1/0.01/0.001
+//   ?mode=long     → all 180 questions, 5 lives, 5 q/group, no early win (plays through all 90)
 const GAME_MODE = (new URLSearchParams(location.search).get("mode") || "all");
 const IS_DECIMAL_MODE = (GAME_MODE === "decimals");
+const IS_LONG_MODE    = (GAME_MODE === "long");
 
 // 40 questions strictly about 0.1, 0.01, 0.001 and related concepts (8 groups × 5)
 const decimalPlaceValueQuestions = [
@@ -1509,23 +1509,27 @@ const decimalPlaceValueQuestions = [
 ];
 
 const questions = IS_DECIMAL_MODE ? decimalPlaceValueQuestions : allQuestions;
-if (IS_DECIMAL_MODE) {
-    // Update header to reflect the mode
+if (IS_DECIMAL_MODE || IS_LONG_MODE) {
     document.addEventListener("DOMContentLoaded", () => {
         const titleEl = document.querySelector(".header-title");
-        if (titleEl) titleEl.textContent = "🔢 עשיריות, מאיות, אלפיות";
-        document.title = "אימון 0.1 / 0.01 / 0.001";
+        if (titleEl) {
+            if (IS_DECIMAL_MODE) titleEl.textContent = "🔢 עשיריות, מאיות, אלפיות";
+            else if (IS_LONG_MODE) titleEl.textContent = "🔢 חשבון – גרסה ארוכה";
+        }
+        if (IS_DECIMAL_MODE) document.title = "אימון 0.1 / 0.01 / 0.001";
+        if (IS_LONG_MODE)    document.title = "חשבון – גרסה ארוכה";
     });
 }
 
 // ── State ─────────────────────────────────────────────────────────
 const TOTAL          = questions.length;   // 100
 const SESSION_SEC    = 0;                  // 0 = no time limit (timer removed)
-const GROUP_SIZE     = IS_DECIMAL_MODE ? 5 : 10;  // 5 q/group (40 total) for decimals mode, else 10
+const GROUP_SIZE     = IS_DECIMAL_MODE ? 5 : 10;  // pool size per group (40 total for decimals, 180 otherwise)
 // Distribute 33 questions across 18 groups so the child sees ALL groups
 // before reaching the 99-point win threshold (33 × 3 pts each).
 // 3 groups get 1 question (A, G, M — every 6th), 15 groups get 2 → total 33.
 function questionsPerGroup(groupIdx){
+    if (IS_LONG_MODE)    return 5;                       // long mode: 5 q × 18 groups = 90 questions
     if (IS_DECIMAL_MODE) return 2;                       // 2 q/group × 8 groups = 16 questions visible (out of 40)
     return (groupIdx % 6 === 0) ? 1 : 2;                 // full mode: 33 questions across 18 groups
 }
@@ -1545,9 +1549,9 @@ let highestGroupReached = 0;   // 0-based — for end-of-session reporting
 let answered          = false;
 let currentShuffledOpts    = [];  // displayed options for the current question (shuffled)
 let currentShuffledCorrect = 0;   // index of correct option AFTER shuffle
-const LIVES_TOTAL     = 3;
+const LIVES_TOTAL     = IS_LONG_MODE ? 5 : 3;
 const POINTS_PER_CORRECT = 3;
-const WIN_SCORE       = IS_DECIMAL_MODE ? 48 : 99; // decimals: 16 q × 3 = 48 (perfect run); full: 99 (33 correct)
+const WIN_SCORE       = IS_LONG_MODE ? 99999 : (IS_DECIMAL_MODE ? 48 : 99); // long: no early win — play through all groups
 let lives             = LIVES_TOTAL;
 let score             = 0;
 let mistakes          = []; // [{ qIdx, qHtml, chosenHtml, correctHtml, correctText, explainHtml }]
@@ -1690,6 +1694,18 @@ function pickMessage(){
 }
 
 // ── Lives & score UI ──────────────────────────────────────────────
+function buildLivesDisplay(){
+    const host = document.getElementById("lives-display");
+    if (!host) return;
+    host.innerHTML = "";
+    for (let i = 0; i < LIVES_TOTAL; i++) {
+        const span = document.createElement("span");
+        span.className = "life";
+        span.dataset.i = i;
+        span.textContent = "🥷";
+        host.appendChild(span);
+    }
+}
 function renderLives(){
     document.querySelectorAll(".life").forEach((el, i) => {
         el.classList.toggle("lost", i >= lives);
@@ -2085,6 +2101,8 @@ window.onload = function(){
     document.getElementById("player-change").addEventListener("click", changePlayerName);
     document.getElementById("restart-btn").addEventListener("click", restartSession);
 
+    // Build the lives row to match LIVES_TOTAL (3 or 5)
+    buildLivesDisplay();
     // Show player picker before starting the game
     showPlayerPicker(() => {
         initSession();
